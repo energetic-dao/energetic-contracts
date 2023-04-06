@@ -15,10 +15,15 @@
   (load "./kips/token-manifest.pact")
   (load "./kips/token-policy-v1.pact")
   (load "./kips/poly-fungible-v2.pact")
+  (load "./kips/fungible-v2.pact")
 
   ;; load util
   (define-namespace 'util (sig-keyset) (sig-keyset))
   (load "./kips/fungible-util.pact")
+(commit-tx)
+
+(begin-tx "Initializing coin contract")
+    (load "./coin/coin.pact")
 (commit-tx)
 
 (begin-tx "Initializing Marmalade namespace")
@@ -46,4 +51,114 @@
   ;; load marmalade
   (define-namespace (read-msg 'ns ) (keyset-ref-guard 'marmalade-admin ) (keyset-ref-guard 'marmalade-admin ))
   (load "./marmalade/ledger.pact")
+(commit-tx)
+
+(begin-tx "Initializing key-sets")
+  (env-data
+    { 
+        "k:admin": { ; creator keyset
+            "keys": ["admin"],
+            "pred": "keys-all"
+        },
+        "k:royalty": { ; royalty keyset
+          "keys": ["royalty"],
+          "pred": "keys-all"
+        },
+        "k:minter-1": {; minter-1 keyset
+          "keys": ["minter-1"],
+          "pred": "keys-all"
+        },
+        'ns: "kinetic",
+        'upgrade: false
+    }
+  )
+(commit-tx)
+
+(begin-tx "Setting coin balances")
+  (env-sigs 
+    [
+      { 
+        'key: "admin",
+        'caps: [
+          (coin.COINBASE)
+        ]
+      },
+      { 
+        'key: "royalty",
+        'caps: [
+          (coin.COINBASE)
+        ]
+      },
+      { 
+        'key: "minter-1",
+        'caps: [
+          (coin.COINBASE)
+        ]
+      }
+    ]
+  )
+  (test-capability (coin.COINBASE ))
+  (coin.create-account "k:admin" (read-keyset "k:admin"))
+  (coin.create-account "k:royalty" (read-keyset "k:royalty"))
+  (coin.create-account "k:minter-1" (read-keyset "k:minter-1"))
+
+  (coin.coinbase "k:minter-1" (read-keyset "k:minter-1") 100.0)
+
+  (expect "k:minter-1 balance is 100.0" (coin.get-balance "k:minter-1") 100.0)
+  (expect "k:admin balance is 0.0" (coin.get-balance "k:admin") 0.0)
+  (expect "k:royalty balance is 0.0" (coin.get-balance "k:royalty") 0.0)
+(commit-tx)
+
+
+(begin-tx "Loading Kinetic namespace")
+  (env-keys ["admin", "royalty", "minter-1"])
+
+  (define-namespace (read-msg 'ns ) (read-keyset "k:admin" ) (read-keyset "k:admin" ))
+  (define-keyset "kinetic.admin" (read-keyset "k:admin" ))
+  (load "./policies/kinetic-policy.pact")
+(commit-tx)
+
+(begin-tx "Create a collection")
+    (use kip.token-manifest)
+    (use marmalade.ledger)
+    (use kinetic.kinetic-policy)
+
+    (expect "Create a collection of 5 tokens"
+      true
+      (let*
+        ( 
+          (stringify-index (lambda (index:integer) (format "{}" [index])))
+          (get-manifest 
+            (lambda (index:integer)
+              (create-manifest (uri "text" (stringify-index index)) [])
+            )
+          )
+          (manifests:list (map get-manifest (enumerate 0 5)))
+          (tokens:list (map (create-token-id) manifests))
+          (tokens-hash:string (hash tokens))
+        )
+        (create-collection 
+          "watt"
+          5.0
+          tokens-hash 
+          "k:admin" 
+          (read-keyset "k:admin") 
+          5.0
+          coin
+        )
+      )
+    )
+
+    (expect "Collection is created"
+      {
+        "supply": 5.0,
+        "provenance-hash": "yXBxbD99WBbrgBUqIZ4nhkkCOvzK09wxGulOV2HBP2I",
+        "tokens": [],
+        "creator-account": "k:admin",
+        "creator-guard": (read-keyset "k:admin"),
+        "price": 5.0,
+        "fungible": coin
+      }
+      (get-collection "watt")
+    )
 (commit-tx)
