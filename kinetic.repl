@@ -118,6 +118,7 @@
 
   (define-namespace (read-msg 'ns ) (read-keyset "k:admin" ) (read-keyset "k:admin" ))
   (define-keyset "free.kinetic-admin" (read-keyset "k:admin" ))
+  (load "./kinetic-collections.pact")
   (load "./policies/kinetic-policy.pact")
 (commit-tx)
 
@@ -125,6 +126,7 @@
     (use kip.token-manifest)
     (use marmalade.ledger)
     (use free.kinetic-policy)
+    (use free.kinetic-collections)
 
     (expect "Create a collection of 5 tokens"
       true
