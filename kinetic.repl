@@ -71,7 +71,7 @@
         "keys": ["minter-1"],
         "pred": "keys-all"
       },
-      'ns: "kinetic",
+      'ns: "free",
       'upgrade: false
     }
   )
@@ -117,14 +117,14 @@
   (env-keys ["admin", "royalty", "minter-1"])
 
   (define-namespace (read-msg 'ns ) (read-keyset "k:admin" ) (read-keyset "k:admin" ))
-  (define-keyset "kinetic.admin" (read-keyset "k:admin" ))
+  (define-keyset "free.kinetic-admin" (read-keyset "k:admin" ))
   (load "./policies/kinetic-policy.pact")
 (commit-tx)
 
 (begin-tx "Create a collection")
     (use kip.token-manifest)
     (use marmalade.ledger)
-    (use kinetic.kinetic-policy)
+    (use free.kinetic-policy)
 
     (expect "Create a collection of 5 tokens"
       true
@@ -150,7 +150,7 @@
                   token-id
                   0
                   manifest
-                  kinetic.kinetic-policy
+                  free.kinetic-policy
                 )
               )
             )
@@ -166,6 +166,7 @@
           coin
         )
         (map create-token manifests)
+        true
       )
     )
 
@@ -185,7 +186,7 @@
 
 (begin-tx "Mint token")
   (use marmalade.ledger)
-  (use kinetic.kinetic-policy)
+  (use free.kinetic-policy)
   ; t:kTKLjmYoR9AOyv8KXcgNGOy8PGeF3cRwmYAofLdMa4w
 
   (env-sigs

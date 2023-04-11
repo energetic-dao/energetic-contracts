@@ -35,7 +35,7 @@
   ;;
 
   (defcap GOVERNANCE:bool ()
-    (enforce-keyset "kinetic.admin")
+    (enforce-keyset "free.kinetic-admin")
   )
 
   (defcap ENFORCE_LEDGER:bool ()
