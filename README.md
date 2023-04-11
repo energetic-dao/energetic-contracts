@@ -61,6 +61,35 @@ Within the module it is possible to use keysets as Guard for restricting access 
   (define-keyset "<namespace_name>.<keyset_name>" (read-keyset "<keyset_in_env_data>" ))
 ```
 
+### Modules
+
+Every contract in Pact represents a module that can be imported into other contracts. 
+
+### Interfaces
+
+An interface is like in any other programming language. This can be used to predefine functions that can be used within the module. This not only limits to functions, but also constants, schema's, capabilities, etc. can be predefined. It can also be used to predefine a type that is used in a schema or functionparameter to make sure the module being passed in is of the correct type.
+
+```js
+  (interface poly-fungible
+    (defun total-supply:decimal (id:string)
+      @doc
+        " Give total available quantity of ID. If not supported, return 0."
+    )
+  )
+```
+
+```js
+  (defschema collection-schema
+    supply:decimal
+    provenance-hash:string
+    tokens:[string]
+    creator-account:string
+    creator-guard:guard
+    price:decimal
+    fungible:module{kip.fungible-v2}
+  )
+```
+
 ### Marmalade Standard
 
 ### Policy
