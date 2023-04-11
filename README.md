@@ -63,7 +63,11 @@ Within the module it is possible to use keysets as Guard for restricting access 
 
 ### Modules
 
-Every contract in Pact represents a module that can be imported into other contracts. 
+Every contract in Pact represents a module that represents the business logic of the contract. This logic can be used directly or can be used as a library for other contracts. A module can be defined by using the `module` keyword. For example:
+
+```js
+  (module my-module)
+```
 
 ### Interfaces
 
