@@ -121,7 +121,23 @@
 
   (defun enforce-init:bool (token:object{token-info})
     @doc "Enforce policy on TOKEN initiation."
-    true
+    (with-capability (ENFORCE_LEDGER)
+      (let 
+        (
+          (token-id:string  (at 'id token))
+          (precision:integer (at 'precision token))
+          (collection-info:object{collection-info} (read-msg 'collection-info ))
+        )
+        (enforce (= precision 0) "Invalid precision")
+        (insert tokens token-id
+          {
+            'collection-id: (at 'id collection-info),
+            'supply: 0.0
+          }
+        )
+        true
+      )
+    )
   )
 
   (defun enforce-offer:bool (token:object{token-info} seller:string amount:decimal sale-id:string)

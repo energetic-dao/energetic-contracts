@@ -33,7 +33,7 @@
       'marmalade-ns-user: ["marmalade-admin"],
       'marmalade-ns-admin: ["marmalade-admin"],
       'ns: 'marmalade,
-      'upgrade: false 
+      'upgrade: false
     }
   )
   (env-sigs
@@ -56,20 +56,23 @@
 (begin-tx "Initializing key-sets")
   (env-data
     { 
-        "k:admin": { ; creator keyset
-            "keys": ["admin"],
-            "pred": "keys-all"
-        },
-        "k:royalty": { ; royalty keyset
-          "keys": ["royalty"],
+      'collection-info: {
+        'id: "watt"
+      },
+      "k:admin": { ; creator keyset
+          "keys": ["admin"],
           "pred": "keys-all"
-        },
-        "k:minter-1": {; minter-1 keyset
-          "keys": ["minter-1"],
-          "pred": "keys-all"
-        },
-        'ns: "kinetic",
-        'upgrade: false
+      },
+      "k:royalty": { ; royalty keyset
+        "keys": ["royalty"],
+        "pred": "keys-all"
+      },
+      "k:minter-1": {; minter-1 keyset
+        "keys": ["minter-1"],
+        "pred": "keys-all"
+      },
+      'ns: "kinetic",
+      'upgrade: false
     }
   )
 (commit-tx)
@@ -126,9 +129,9 @@
     (expect "Create a collection of 5 tokens"
       true
       (let*
-        ( 
+        (
           (stringify-index (lambda (index:integer) (format "{}" [index])))
-          (get-manifest 
+          (get-manifest
             (lambda (index:integer)
               (create-manifest (uri "text" (stringify-index index)) [])
             )
@@ -136,16 +139,33 @@
           (manifests:list (map get-manifest (enumerate 0 5)))
           (tokens:list (map (create-token-id) manifests))
           (tokens-hash:string (hash tokens))
+          (create-token
+            (lambda (manifest:object{manifest})
+              (let
+                (
+                  (token-id:string (create-token-id manifest))
+                )
+    
+                (marmalade.ledger.create-token
+                  token-id
+                  0
+                  manifest
+                  kinetic.kinetic-policy
+                )
+              )
+            )
+          )
         )
-        (create-collection 
+        (create-collection
           "watt"
           5.0
-          tokens-hash 
-          "k:admin" 
-          (read-keyset "k:admin") 
+          tokens-hash
+          "k:admin"
+          (read-keyset "k:admin")
           5.0
           coin
         )
+        (map create-token manifests)
       )
     )
 
@@ -161,4 +181,50 @@
       }
       (get-collection "watt")
     )
+(commit-tx)
+
+(begin-tx "Mint token")
+  (use marmalade.ledger)
+  (use kinetic.kinetic-policy)
+  ; t:kTKLjmYoR9AOyv8KXcgNGOy8PGeF3cRwmYAofLdMa4w
+
+  (env-sigs
+    [
+      { 
+        'key: 'minter-1,
+        'caps: [
+          (marmalade.ledger.MINT "t:fgnk8jnlTvB8iToPf2ACNpy8BInAj5OTXvzELgAKvRc" "k:minter-1" 1.0),
+          (coin.TRANSFER "k:minter-1" "k:admin" 5.0)
+        ]
+      }
+    ]
+  )
+
+  (expect "Perform mint"
+    true
+    (marmalade.ledger.mint
+      "t:fgnk8jnlTvB8iToPf2ACNpy8BInAj5OTXvzELgAKvRc"
+      "k:minter-1"
+      (read-keyset "k:minter-1" )
+      1.0
+    )
+  )
+
+  (expect "k:minter-1 Nft balance to be 1.0"
+    1.0
+    (marmalade.ledger.get-balance 
+      "t:fgnk8jnlTvB8iToPf2ACNpy8BInAj5OTXvzELgAKvRc"
+      "k:minter-1"
+    )
+  )
+
+  (expect "k:minter-1 Coin balance to be 95.0"
+    95.0
+    (coin.get-balance "k:minter-1")
+  )
+
+  (expect "k:admin Coin balance to be 5.0"
+    5.0
+    (coin.get-balance "k:admin")
+  )
 (commit-tx)
