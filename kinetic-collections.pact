@@ -23,6 +23,10 @@
     (deftable tokens:{token-schema})
     (deftable collections:{collection-schema})
 
+    (defschema collection-info
+        id:string
+    )
+
     ;;
     ;; Capabilities
     ;;

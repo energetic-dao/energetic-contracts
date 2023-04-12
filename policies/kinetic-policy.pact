@@ -3,15 +3,11 @@
 
   (implements kip.token-policy-v1)
   (use kip.token-policy-v1 [token-info])
-  (use free.kinetic-collections [create-token get-collection get-token])
+  (use free.kinetic-collections [create-token get-collection get-token collection-info])
 
   ;;
   ;; Schemas
   ;;
-
-  (defschema collection-info
-    id:string
-  )
 
   ;;
   ;; Capabilities
@@ -75,7 +71,7 @@
         (property (!= account ""))
         (property (> amount 0.0))
     ]
-    true
+    false
   )
 
   (defun enforce-init:bool (token:object{token-info})
@@ -97,22 +93,13 @@
   (defun enforce-offer:bool (token:object{token-info} seller:string amount:decimal sale-id:string)
     @doc "Offer policy of sale SALE-ID by SELLER of AMOUNT of TOKEN."
     (with-capability (ENFORCE_LEDGER)
-      (let 
-        (
-          (token-id:string  (at 'id token))
-          (precision:integer (at 'precision token))
-          (collection-info:object{collection-info} (read-msg 'collection-info ))
-        )
-        (enforce (= precision 0) "Invalid precision")
-        (create-token token-id (at 'id collection-info) 0.0)
-        true
-      )
+      false
     )
   )
 
   (defun enforce-buy:bool (token:object{token-info} seller:string buyer:string buyer-guard:guard amount:decimal sale-id:string)
     @doc "Buy policy on SALE-ID by SELLER to BUYER AMOUNT of TOKEN."
-    true
+    false
   )
 
   (defun enforce-transfer:bool (token:object{token-info} sender:string guard:guard receiver:string amount:decimal)
@@ -124,6 +111,6 @@
   (defun enforce-crosschain:bool (token:object{token-info} sender:string guard:guard receiver:string target-chain:string amount:decimal)
     @doc " Enforce rules on crosschain transfer of TOKEN AMOUNT \
             \ from SENDER to RECEIVER on TARGET-CHAIN."
-    true
+    false
   )
 )
