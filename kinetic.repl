@@ -176,7 +176,6 @@
       {
         "supply": 5.0,
         "provenance-hash": "yXBxbD99WBbrgBUqIZ4nhkkCOvzK09wxGulOV2HBP2I",
-        "tokens": [],
         "creator-account": "k:admin",
         "creator-guard": (read-keyset "k:admin"),
         "price": 5.0,
@@ -189,7 +188,6 @@
 (begin-tx "Mint token")
   (use marmalade.ledger)
   (use free.kinetic-policy)
-  ; t:kTKLjmYoR9AOyv8KXcgNGOy8PGeF3cRwmYAofLdMa4w
 
   (env-sigs
     [
