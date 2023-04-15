@@ -3,6 +3,7 @@
 
   (implements kip.token-policy-v1)
   (use kip.token-policy-v1 [token-info])
+  (use kip.token-manifest [manifest])
   (use free.kinetic-collections [create-token get-collection get-token collection-info])
 
   ;;
@@ -26,6 +27,11 @@
   ;;
   
   (defcap COLLECTION_ITEM_MINTED:bool (collection-id:string current-supply:decimal token-id:string minter:string)
+    @event
+    true
+  )
+  
+  (defcap COLLECTION_ITEM_CREATED:bool (collection-id:string token-id:string manifest:object{manifest})
     @event
     true
   )
@@ -85,7 +91,7 @@
         )
         (enforce (= precision 0) "Invalid precision")
         (create-token token-id (at 'id collection-info) 0.0)
-        true
+        (emit-event (COLLECTION_ITEM_CREATED (at 'id collection-info) token-id (at 'manifest token)))
       )
     )
   )
