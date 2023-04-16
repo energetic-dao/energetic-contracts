@@ -246,13 +246,28 @@
 (begin-tx "Token transfers")
   (env-sigs
     [
-      { 
+      {
         'key: 'minter-1,
         'caps: [
-          (marmalade.ledger.TRANSFER "t:fgnk8jnlTvB8iToPf2ACNpy8BInAj5OTXvzELgAKvRc" "k:minter-1" "k:minter-2" 1.0)
+          (marmalade.ledger.TRANSFER "t:fgnk8jnlTvB8iToPf2ACNpy8BInAj5OTXvzELgAKvRc" "k:minter-1" "k:minter-2" 1.0),
+          (marmalade.ledger.TRANSFER "t:really-exist" "k:minter-1" "k:minter-2" 1.0)
+        ]
+      },
+      {
+        'key: 'minter-2,
+        'caps: [
+          (marmalade.ledger.TRANSFER "t:fgnk8jnlTvB8iToPf2ACNpy8BInAj5OTXvzELgAKvRc" "k:minter-2" "k:minter-1" 1.0)
         ]
       }
     ]
+  )
+
+  (expect-failure "Cannot transfer NFT that doesn't exist"
+    (marmalade.ledger.transfer-create "t:really-exist" "k:minter-2" "k:minter-1" (read-keyset "k:minter-1") 1.0)
+  )
+
+  (expect-failure "Cannot transfer NFT that isn't owned by sender"
+    (marmalade.ledger.transfer-create "t:fgnk8jnlTvB8iToPf2ACNpy8BInAj5OTXvzELgAKvRc" "k:minter-2" "k:minter-1" (read-keyset "k:minter-1") 1.0)
   )
 
   (expect "Transfer NFT from k:minter-1 to k:minter-2"
