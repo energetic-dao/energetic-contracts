@@ -10,6 +10,13 @@
   ;; Schemas
   ;;
 
+  (defschema watt-status-schema
+    for-sale:bool
+    staked:bool
+  )
+
+  (deftable watt-status-table:{watt-status-schema})
+
   ;;
   ;; Capabilities
   ;;
@@ -32,6 +39,11 @@
   )
   
   (defcap COLLECTION_ITEM_CREATED:bool (collection-id:string token-id:string manifest:object{manifest})
+    @event
+    true
+  )
+
+  (defcap COLLECTION_ITEM_TRANSFERED:bool (collection-id:string token-id:string sender:string receiver:string amount:decimal)
     @event
     true
   )
@@ -63,6 +75,12 @@
               (current-supply:decimal (+ amount (at 'supply token)))
             )
             (enforce (<= current-supply max-supply) "max-supply exceeded")
+            (insert watt-status-table (at 'id token) 
+              { 
+                'for-sale: false,
+                'staked: false 
+              }
+            )
             (coin.transfer account creator-account price)
             (emit-event (COLLECTION_ITEM_MINTED collection-id current-supply (at 'id token) account))
           )
@@ -72,16 +90,16 @@
   )
 
   (defun enforce-burn:bool (token:object{token-info} account:string amount:decimal)
-    @doc "Burning policy for TOKEN to ACCOUNT for AMOUNT."
     @model [
         (property (!= account ""))
         (property (> amount 0.0))
     ]
-    false
+    (with-capability (ENFORCE_LEDGER)
+      false
+    )
   )
 
   (defun enforce-init:bool (token:object{token-info})
-    @doc "Enforce policy on TOKEN initiation."
     (with-capability (ENFORCE_LEDGER)
       (let 
         (
@@ -104,19 +122,40 @@
   )
 
   (defun enforce-buy:bool (token:object{token-info} seller:string buyer:string buyer-guard:guard amount:decimal sale-id:string)
-    @doc "Buy policy on SALE-ID by SELLER to BUYER AMOUNT of TOKEN."
-    false
+    (with-capability (ENFORCE_LEDGER)
+      false
+    )
   )
 
   (defun enforce-transfer:bool (token:object{token-info} sender:string guard:guard receiver:string amount:decimal)
-    @doc " Enforce rules on transfer of TOKEN AMOUNT from SENDER to RECEIVER. \
-            \ Also governs rotate of SENDER (with same RECEIVER and 0.0 AMOUNT). "
-    true
+    (with-capability (ENFORCE_LEDGER)
+      (with-read watt-status-table (at 'id token)
+        {
+          'for-sale := for-sale,
+          'staked := staked
+        }
+        (enforce (= for-sale false) "The token is currently for sale")
+        (enforce (= staked false) "The token is currently staked")
+        (bind (get-token (at 'id token))
+          {
+            'collection-id := collection-id
+          }
+          (emit-event (COLLECTION_ITEM_TRANSFERED collection-id (at 'id token) sender receiver amount))
+        )
+      )
+    )
   )
 
   (defun enforce-crosschain:bool (token:object{token-info} sender:string guard:guard receiver:string target-chain:string amount:decimal)
-    @doc " Enforce rules on crosschain transfer of TOKEN AMOUNT \
-            \ from SENDER to RECEIVER on TARGET-CHAIN."
-    false
+    (with-capability (ENFORCE_LEDGER)
+      false
+    )
   )
+)
+
+(if (read-msg 'upgrade )
+  ["upgrade complete"]
+  [
+    (create-table watt-status-table)
+  ]
 )
