@@ -120,6 +120,7 @@
   (define-keyset "free.kinetic-admin" (read-keyset "k:admin" ))
   (load "./kinetic-collections.pact")
   (load "./policies/kinetic-policy.pact")
+  (load "./staking/kinetic-staking-center.pact")
 (commit-tx)
 
 (begin-tx "Create a collection")
@@ -228,4 +229,12 @@
     5.0
     (coin.get-balance "k:admin")
   )
+(commit-tx)
+
+(begin-tx "Staking center")
+  (use free.kinetic-staking-center)
+
+  (print (free.kinetic-staking-center.create-escrow-address "k:watt"))
+  (print (free.kinetic-staking-center.get-amount-of-tokens-staked "t:fgnk8jnlTvB8iToPf2ACNpy8BInAj5OTXvzELgAKvRc" "k:minter-2"))
+  (free.kinetic-staking-center.create-collection-pool "watt-pool" "watt" coin 0.0 (read-keyset "k:admin"))
 (commit-tx)
