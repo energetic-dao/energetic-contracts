@@ -235,7 +235,30 @@
 (begin-tx "Staking center")
   (use free.kinetic-staking-center)
 
-  (print (free.kinetic-staking-center.create-escrow-address "k:watt"))
-  (print (free.kinetic-staking-center.get-amount-of-tokens-staked "t:fgnk8jnlTvB8iToPf2ACNpy8BInAj5OTXvzELgAKvRc" "k:minter-2"))
-  (free.kinetic-staking-center.create-collection-pool "watt-pool" "watt" coin 0.0 (read-keyset "k:admin"))
+  (env-sigs
+    [
+      {
+        'key: 'minter-1,
+        'caps: [
+          (marmalade.ledger.TRANSFER "t:fgnk8jnlTvB8iToPf2ACNpy8BInAj5OTXvzELgAKvRc" "k:minter-1" "u:free.kinetic-staking-center.require-POOL:6WKEyiyjI19-2CYNJGG3b1t61O198155IK6m8OeGyiU" 1.0)
+        ]
+      }
+    ]
+  )
+
+  (expect "Create a staking pool"
+    {
+      "name": "watt-pool",
+      "escrow-account": "u:free.kinetic-staking-center.require-POOL:6WKEyiyjI19-2CYNJGG3b1t61O198155IK6m8OeGyiU",
+      "payout-currency": coin,
+      "apy": 0.0,
+      "guard": (read-keyset "k:admin")
+    }
+    (free.kinetic-staking-center.create-collection-pool "watt-pool" "watt" coin 0.0 (read-keyset "k:admin"))
+  )
+
+  (expect "Stake NFT to created Watt pool"
+    true
+    (free.kinetic-staking-center.stake "watt" "k:minter-1" (read-keyset "k:minter-1") "t:fgnk8jnlTvB8iToPf2ACNpy8BInAj5OTXvzELgAKvRc" 1.0)
+  )
 (commit-tx)

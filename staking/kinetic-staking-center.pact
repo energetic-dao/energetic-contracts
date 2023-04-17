@@ -16,7 +16,7 @@
   ;;
   (defschema collection-pool-schema
     name:string
-    escrow-address:string
+    escrow-account:string
     payout-currency:module{kip.fungible-v2}
     apy:decimal
     guard:guard
@@ -41,33 +41,42 @@
   ;;
   ;; Capabilities
   ;;
-  (defcap GOVERNANCE ()
+
+  (defcap GOVERNANCE:bool ()
     (enforce-keyset "free.kinetic-admin")
   )
 
-  (defcap PRIVATE ()
+  (defcap PRIVATE:bool ()
     true
   )
 
-  (defcap STAKE (account:string escrow-account:string token-id:string amount:decimal)
+  (defcap STAKE:bool (account:string escrow-account:string token-id:string amount:decimal)
+    true
+  )
+  
+  (defcap COLLECTION_POOL:bool (pool-id:string) 
     true
   )
 
+  ;;
+  ;; Pool
+  ;;
+
+  (defun require-POOL:bool (pool-id:string)
+    (require-capability (COLLECTION_POOL pool-id))
+  )
+
+  (defun create-pool-guard:guard (pool-id:string)
+    (create-user-guard (require-POOL pool-id))
+  )
+
+  (defun create-escrow-account (pool-id:string)
+    (create-principal (create-pool-guard pool-id))
+  )
+  
   ;;
   ;; Utility Functions
   ;;
-
-  (defun create-pool-guard:guard (pool-id:string)
-    (with-capability (PRIVATE)
-      (create-module-guard pool-id)
-    )
-  )
-
-  (defun create-escrow-address (pool-id:string)
-    (with-capability (PRIVATE)
-      (create-principal (create-pool-guard pool-id))
-    )
-  )
 
   (defun current-time:time ()
     (at 'block-time (chain-data))
@@ -78,37 +87,47 @@
   ;;
 
   (defun create-collection-pool:string (name:string collection-id:string payout-currency:module{kip.fungible-v2} apy:decimal guard:guard)
-    ;;(with-capability (GOVERNANCE)
+    ;(with-capability (GOVERNANCE) @todo figure out why this is failing (Keyset failure (keys-all): 'free.kinetic-admin")
       (let
         (
           (escrow-pool-guard (create-pool-guard collection-id))
-          (escrow-address (create-escrow-address collection-id))
+          (escrow-account (create-escrow-account collection-id))
         )
-        (payout-currency::create-account escrow-address escrow-pool-guard)
-        ; (marmalade.ledger.create-account token-id escrow-address escrow-pool-guard)
+        (payout-currency::create-account escrow-account escrow-pool-guard)
         (insert collection-pool-table collection-id
           { 
             'name: name,
-            'escrow-address: escrow-address,
+            'escrow-account: escrow-account,
             'payout-currency: payout-currency,
             'apy: apy,
             'guard: guard
           }
         )
+        { 
+          'name: name,
+          'escrow-account: escrow-account,
+          'payout-currency: payout-currency,
+          'apy: apy,
+          'guard: guard
+        }
       )
-    ;;)
+    ;)
   )
 
   (defun stake:string (pool-id:string account:string account-guard:guard token-id:string amount:decimal)
-    (with-capability (GOVERNANCE)
-      (enforce (>= amount 0.0) "Amount must be greater than 0")
-      (with-read collection-pool-schema pool-id
-        {
-          'escrow-address:= escrow-address
-        }
+    (enforce (>= amount 0.0) "Amount must be greater than 0")
+    (with-read collection-pool-table pool-id
+      {
+        'escrow-account:= escrow-account
+      }
 
-        (with-capability (STAKE account escrow-address token-id)
-          (marmalade.ledger.transfer token-id account escrow-address amount)
+      (let
+        (
+          (escrow-pool-guard (create-pool-guard pool-id))
+        )
+        (marmalade.ledger.create-account token-id escrow-account escrow-pool-guard)
+        (with-capability (STAKE account escrow-account token-id amount)
+          (marmalade.ledger.transfer token-id account escrow-account amount)
           (write account-staking-table (format "{}:{}" [pool-id account])
             {
               'pool-id: pool-id,
@@ -134,6 +153,7 @@
                 }
               )
             )
+            true
           )
         )
       )
@@ -145,17 +165,38 @@
   ;;
 
   (defun get-amount-of-tokens-staked (token-id:string account:string)
-    ;;(with-default-read staked-nft-table (format "{}:{}" [token-id account])
-    ;;  {
-    ;;    'amount: 0.0,
-    ;;    'token-id: token-id,
-    ;;    'locked-since: (current-time)
-    ;;  }
-    ;;  {
-    ;;    'amount := amount
-    ;;  }
-    ;;)
-    0.0
+    (with-default-read staked-nft-table (format "{}:{}" [token-id account])
+      {
+        'amount: 0.0,
+        'token-id: token-id,
+        'locked-since: (current-time)
+      }
+      {
+        'amount := amount
+      }
+      {
+        'amount: amount
+      }
+    )
+  )
+
+  (defun get-pool (pool-id:string)
+    (with-read collection-pool-table pool-id
+      {
+        'name:= name,
+        'escrow-account:= escrow-account,
+        'payout-currency:= payout-currency,
+        'apy:= apy,
+        'guard:= guard
+      }
+      {
+        'name: name,
+        'escrow-account: escrow-account,
+        'payout-currency: payout-currency,
+        'apy: apy,
+        'guard: guard
+      }
+    )
   )
 )
 
