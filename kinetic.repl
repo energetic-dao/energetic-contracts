@@ -16,6 +16,7 @@
   (load "./kips/token-policy-v1.pact")
   (load "./kips/poly-fungible-v2.pact")
   (load "./kips/fungible-v2.pact")
+  (load "./kips/fungible-xchain-v1.pact")
 
   ;; load util
   (define-namespace 'util (sig-keyset) (sig-keyset))
