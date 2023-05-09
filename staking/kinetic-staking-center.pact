@@ -17,7 +17,7 @@
   (defschema collection-pool-schema
     name:string
     escrow-account:string
-    payout-currency:module{kip.fungible-v2}
+    payout-currency:module{fungible-v2}
     apy:decimal
     guard:guard
   )
@@ -86,7 +86,7 @@
   ;; Functions
   ;;
 
-  (defun create-collection-pool:string (name:string collection-id:string payout-currency:module{kip.fungible-v2} apy:decimal guard:guard)
+  (defun create-collection-pool:string (name:string collection-id:string payout-currency:module{fungible-v2} apy:decimal guard:guard)
     ;(with-capability (GOVERNANCE) @todo figure out why this is failing (Keyset failure (keys-all): 'free.kinetic-admin")
       (let
         (

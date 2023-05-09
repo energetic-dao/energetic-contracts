@@ -16,8 +16,8 @@
           (<= (length account) 256)))
     ]
 
-  (implements kip.fungible-v2)
-  (implements kip.fungible-xchain-v1)
+  (implements fungible-v2)
+  (implements fungible-xchain-v1)
 
   ;; coin-v2
   (bless "ut_J_ZNkoyaPUEJhiwVeWnkSQn9JT9sQCWKdjjVVrWo")
@@ -300,7 +300,7 @@
       )
     )
 
-  (defun details:object{kip.fungible-v2.account-details}
+  (defun details:object{fungible-v2.account-details}
     ( account:string )
     (with-read coin-table account
       { "balance" := bal

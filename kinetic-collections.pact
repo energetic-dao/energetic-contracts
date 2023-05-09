@@ -11,7 +11,7 @@
     creator-account:string
     creator-guard:guard
     price:decimal
-    fungible:module{kip.fungible-v2}
+    fungible:module{fungible-v2}
   )
 
   (defschema token-schema
@@ -47,7 +47,7 @@
   ;; Functions
   ;;
 
-  (defun create-collection:bool (id:string supply:decimal provenance-hash:string creator:string creator-guard:guard price:decimal fungible:module{kip.fungible-v2})
+  (defun create-collection:bool (id:string supply:decimal provenance-hash:string creator:string creator-guard:guard price:decimal fungible:module{fungible-v2})
     (with-capability (GOVERNANCE)
       (insert collections id
         {

@@ -1,0 +1,6 @@
+(begin-tx "Root")
+  (load "./fungible-v2.pact")
+  (load "./fungible-xchain-v1.pact")
+  (load "./gas-payer-v1.pact")
+  (load "./coin-v5.pact")
+(commit-tx)
