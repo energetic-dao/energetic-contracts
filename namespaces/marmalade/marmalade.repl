@@ -1,0 +1,26 @@
+(begin-tx "Marmalade")
+  (env-exec-config ["DisablePact44"])
+  (env-data
+    { 
+      'marmalade-admin: ["marmalade-admin"],
+      'marmalade-ns-user: ["marmalade-admin"],
+      'marmalade-ns-admin: ["marmalade-admin"],
+      'ns: 'marmalade,
+      'upgrade: false
+    }
+  )
+  (env-sigs
+    [
+      { 
+        'key: 'marmalade-admin,
+        'caps: []
+      }
+    ]
+  )
+  (env-keys ["marmalade-admin"])
+
+  (define-keyset 'marmalade-admin (read-keyset 'marmalade-admin ))
+
+  (define-namespace (read-msg 'ns ) (keyset-ref-guard 'marmalade-admin ) (keyset-ref-guard 'marmalade-admin ))
+  (load "./ledger.pact")
+(commit-tx)
