@@ -1,4 +1,5 @@
 (load "./kips/kip.repl")
 (load "./util/util.repl")
 (load "./root/root.repl")
-(load "./marmalade/marmalade.repl")
+(load "./marmalade-v2/marmalade-v2.repl")
+(load "./marmalade-v2/policy-manager/policy-manager.repl")
