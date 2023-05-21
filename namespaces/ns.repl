@@ -1,0 +1,4 @@
+(load "./kips/kip.repl")
+(load "./util/util.repl")
+(load "./root/root.repl")
+(load "./marmalade/marmalade.repl")
