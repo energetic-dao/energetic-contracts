@@ -24,6 +24,7 @@
   (define-keyset "free.energetic-admin" (read-keyset "energetic-admin"))
 
   (load "./dao/policies/energetic-upgradable-item-policy.pact")
+  (load "./dao/policies/energetic-manifest-policy.pact")
 (commit-tx)
 
 (begin-tx "Setup Plot collections")
@@ -73,7 +74,7 @@
     (defconst PLOT_COLLECTION_POLICIES:object{token-policies}
       { 
         'concrete-policies: PLOT_COLLECTION,
-        'immutable-policies: [free.energetic-upgradable-item-policy],
+        'immutable-policies: [free.energetic-upgradable-item-policy, free.energetic-manifest-policy],
         'adjustable-policies: []
       }
     )
@@ -115,10 +116,15 @@
   (use marmalade.ledger)
   (use marmalade.policy-manager)
   (use marmalade.collection-policy-v1)
+  (use free.energetic-manifest-policy)
 
   (env-data
     {
       'dao: {
+        'keys: ["dao"],
+        'pred: "keys-all"
+      },
+      'dao-manifest-upgrader: {
         'keys: ["dao"],
         'pred: "keys-all"
       },
@@ -129,6 +135,45 @@
       "nfp-mint-guard": {
         "keys": ["dao"],
         "pred": "keys-all"
+      },
+      "plot-one-token-id": (create-token-id { 'uri: "plot-1-uri", 'precision: 0, 'policies: energetic-constants.PLOT_COLLECTION_POLICIES }),
+      "item-manifest": {
+        'manifest: (kip.token-manifest.create-manifest (kip.token-manifest.uri "text" "@todo") [
+          (kip.token-manifest.create-datum (kip.token-manifest.uri "text" "json")
+            {
+              'attributes: [
+                {
+                  'trait_type: "Plot",
+                  'value: "normal"
+                },
+                {
+                  'trait_type: "Size",
+                  'value: "large"
+                },
+                {
+                  'trait_type: "Effect",
+                  'value: "floating"
+                },
+                {
+                  'trait_type: "Panels",
+                  'value: 0
+                },
+                {
+                  'trait_type: "Wind-Turbines",
+                  'value: 0
+                }
+                {
+                  'trait_type: "Batteries",
+                  'value: 0
+                }
+              ]
+            }
+          )
+        ]),
+        'guard: {
+          'keys: ["dao"],
+          'pred: "keys-all"
+        }
       },
       "collection-id": "collection:DEulkJ-qDySv_BFKQvJEj315-x5JdnFObku8DXk4iKI",
       'ns: "free",
@@ -142,19 +187,20 @@
         'key: 'dao,
         'caps: [
           (marmalade.collection-policy-v1.OPERATOR (read-msg "collection-id"))
+          (free.energetic-manifest-policy.UPGRADE "t:L514xxmBpiINWZTWSKmjldayZmgZgDTYXAMsn3tdOGw")
         ]
       }
     ]
   )
 
-  (let
-    (
-      (plot-one-id:string (create-token-id { 'uri: "plot-1-uri", 'precision: 0, 'policies: energetic-constants.PLOT_COLLECTION_POLICIES }))
-    )
-    (expect "Create a Plot token"
-      true
-      (create-token plot-one-id 0 "plot-1-uri" energetic-constants.PLOT_COLLECTION_POLICIES)
-    )
+  (expect "Create a Plot token"
+    true
+    (create-token (read-msg "plot-one-token-id") 0 "plot-1-uri" energetic-constants.PLOT_COLLECTION_POLICIES)
+  )
+
+  (expect "Update the manifest of the Plot token"
+    "Write succeeded"
+    (upgrade-manifest (read-msg 'plot-one-token-id ) (at 'manifest (read-msg 'item-manifest )))
   )
 
   (expect "Validate energetic-plot collection"
