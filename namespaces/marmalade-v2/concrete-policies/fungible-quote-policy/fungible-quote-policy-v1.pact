@@ -4,11 +4,11 @@
   @doc "Concrete policy for a simple quoted sale"
 
   (defcap GOVERNANCE ()
-    (enforce-guard (keyset-ref-guard "marmalade-v2.marmalade-admin")))
+    (enforce-guard (keyset-ref-guard "marmalade.marmalade-admin")))
 
   (implements kip.token-policy-v2 )
-  (implements marmalade-v2.fungible-quote-policy-interface-v1)
-  (use marmalade-v2.fungible-quote-policy-interface-v1 [quote-spec quote-schema marketplace-fee-spec QUOTE-MSG-KEY MARKETPLACE-FEE-MSG-KEY ])
+  (implements marmalade.fungible-quote-policy-interface-v1)
+  (use marmalade.fungible-quote-policy-interface-v1 [quote-spec quote-schema marketplace-fee-spec QUOTE-MSG-KEY MARKETPLACE-FEE-MSG-KEY ])
   (use kip.token-policy-v2 [token-info])
 
   (defcap QUOTE:bool
@@ -30,7 +30,7 @@
     (read quotes sale-id))
 
   (defun enforce-ledger:bool ()
-     (enforce-guard (marmalade-v2.ledger.ledger-guard))
+     (enforce-guard (marmalade.ledger.ledger-guard))
   )
 
   (defun enforce-init:bool

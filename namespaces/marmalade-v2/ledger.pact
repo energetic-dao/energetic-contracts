@@ -9,7 +9,7 @@
     ]
 
   (use util.fungible-util)
-  (use marmalade-v2.policy-manager)
+  (use marmalade.policy-manager)
   (implements kip.poly-fungible-v3)
   (use kip.poly-fungible-v3 [account-details sender-balance-change receiver-balance-change])
   (use kip.token-policy-v2 [token-policies])
@@ -41,7 +41,7 @@
   ;;
 
   (defcap GOVERNANCE ()
-    (enforce-guard (keyset-ref-guard "marmalade-v2.marmalade-admin")))
+    (enforce-guard (keyset-ref-guard "marmalade.marmalade-admin")))
 
   ;;
   ;; poly-fungible-v3 caps
@@ -243,7 +243,7 @@
        (enforce-token-reserved id token-details)
       )
       ;; maps policy list and calls policy::enforce-init
-      (marmalade-v2.policy-manager.enforce-init
+      (marmalade.policy-manager.enforce-init
         { 'id: id, 'supply: 0.0, 'precision: precision, 'uri: uri,  'policies: policies})
 
       (insert tokens id {
@@ -323,7 +323,7 @@
       amount:decimal
     )
     (let ((token (get-token-info id)))
-      (marmalade-v2.policy-manager.enforce-transfer token sender (account-guard id sender) receiver amount))
+      (marmalade.policy-manager.enforce-transfer token sender (account-guard id sender) receiver amount))
   )
 
   (defun transfer-create:bool
@@ -358,7 +358,7 @@
     (with-capability (LEDGER)
       (with-capability (MINT id account amount)
         (let ((token (get-token-info id)))
-          (marmalade-v2.policy-manager.enforce-mint token account guard amount))
+          (marmalade.policy-manager.enforce-mint token account guard amount))
         (let
           (
             (receiver (credit id account guard amount))
@@ -378,7 +378,7 @@
     (with-capability (LEDGER)
       (with-capability (BURN id account amount)
         (let ((token (get-token-info id)))
-          (marmalade-v2.policy-manager.enforce-burn token account amount))
+          (marmalade.policy-manager.enforce-burn token account amount))
         (let
           (
             (sender (debit id account amount))
@@ -578,7 +578,7 @@
     @doc "Initiate sale with by SELLER by escrowing AMOUNT of TOKEN until TIMEOUT."
     (require-capability (SALE_PRIVATE (pact-id)))
     (let ((token (get-token-info id)))
-      (marmalade-v2.policy-manager.enforce-offer token seller amount (pact-id)))
+      (marmalade.policy-manager.enforce-offer token seller amount (pact-id)))
     (let
       (
         (sender (debit id seller amount))
@@ -596,7 +596,7 @@
     @doc "Withdraw offer by SELLER of AMOUNT of TOKEN"
     (require-capability (SALE_PRIVATE (pact-id)))
     (let ((token (get-token-info id)))
-      (marmalade-v2.policy-manager.enforce-withdraw token seller amount (pact-id)))
+      (marmalade.policy-manager.enforce-withdraw token seller amount (pact-id)))
     (let
       (
         (sender (debit id (sale-account) amount))
@@ -618,7 +618,7 @@
     @doc "Complete sale with transfer."
     (require-capability (SALE_PRIVATE (pact-id)))
     (let ((token (get-token-info id)))
-      (marmalade-v2.policy-manager.enforce-buy token seller buyer buyer-guard amount sale-id))
+      (marmalade.policy-manager.enforce-buy token seller buyer buyer-guard amount sale-id))
     (let
       (
         (sender (debit id (sale-account) amount))

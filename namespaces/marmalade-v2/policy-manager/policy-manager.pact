@@ -3,7 +3,7 @@
 
 (module policy-manager GOVERNANCE
   (defcap GOVERNANCE ()
-    (enforce-guard "marmalade-v2.marmalade-admin"))
+    (enforce-guard "marmalade.marmalade-admin"))
 
   (implements kip.token-policy-v2)
   (use kip.token-policy-v2 [token-policies token-info concrete-policy NON_FUNGIBLE_POLICY QUOTE_POLICY ROYALTY_POLICY COLLECTION_POLICY])
@@ -36,7 +36,7 @@
 
   (defcap CONCRETE_POLICY_ADMIN (policy-field:string)
     ;;add admin check
-    (enforce-guard "marmalade-v2.marmalade-admin")
+    (enforce-guard "marmalade.marmalade-admin")
   )
 
   (defcap QUOTE_ESCROW (sale-id:string)
@@ -140,10 +140,10 @@
       sale-id:string )
     (enforce-ledger)
     (let ((policies:object{token-policies}  (at 'policies token))
-          (quote-policy:module{kip.token-policy-v2, marmalade-v2.fungible-quote-policy-interface-v1} (get-concrete-policy QUOTE_POLICY)))
+          (quote-policy:module{kip.token-policy-v2, marmalade.fungible-quote-policy-interface-v1} (get-concrete-policy QUOTE_POLICY)))
       (if (is-used policies QUOTE_POLICY)
-        (let* ((quote:object{marmalade-v2.fungible-quote-policy-interface-v1.quote-schema} (quote-policy::get-quote sale-id))
-               (spec:object{marmalade-v2.fungible-quote-policy-interface-v1.quote-spec} (at 'spec quote))
+        (let* ((quote:object{marmalade.fungible-quote-policy-interface-v1.quote-schema} (quote-policy::get-quote sale-id))
+               (spec:object{marmalade.fungible-quote-policy-interface-v1.quote-spec} (at 'spec quote))
                (fungible:module{fungible-v2} (at 'fungible spec))
                (price:decimal (at 'price spec))
                (sale-price:decimal (floor (* price amount) (fungible::precision)))

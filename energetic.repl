@@ -12,7 +12,7 @@
 
   (env-sigs
     [
-      { 
+      {
         'key: 'energetic-admin,
         'caps: []
       }
@@ -27,9 +27,9 @@
 (commit-tx)
 
 (begin-tx "Setup Plot collections")
-  (use marmalade-v2.ledger)
-  (use marmalade-v2.policy-manager)
-  (use marmalade-v2.collection-policy-v1)
+  (use marmalade.ledger)
+  (use marmalade.policy-manager)
+  (use marmalade.collection-policy-v1)
 
   (env-data
     {
@@ -81,11 +81,11 @@
 (commit-tx)
 
 (begin-tx "Create Plot for collection")
-  (use marmalade-v2.ledger)
-  (use marmalade-v2.policy-manager)
-  (use marmalade-v2.collection-policy-v1)
+  (use marmalade.ledger)
+  (use marmalade.policy-manager)
+  (use marmalade.collection-policy-v1)
 
-  (env-data 
+  (env-data
     {
       "collection-id": "collection:DEulkJ-qDySv_BFKQvJEj315-x5JdnFObku8DXk4iKI",
       "cp-mint-guard": {
@@ -112,9 +112,9 @@
 
 
 (begin-tx "Create Plot for collection")
-  (use marmalade-v2.ledger)
-  (use marmalade-v2.policy-manager)
-  (use marmalade-v2.collection-policy-v1)
+  (use marmalade.ledger)
+  (use marmalade.policy-manager)
+  (use marmalade.collection-policy-v1)
 
   (env-data
     {
@@ -136,13 +136,12 @@
     }
   )
 
-
   (env-sigs
     [
       {
         'key: 'dao,
         'caps: [
-          (marmalade-v2.collection-policy-v1.OPERATOR (read-msg 'collection-id))
+          (marmalade.collection-policy-v1.OPERATOR (read-msg "collection-id"))
         ]
       }
     ]
@@ -163,17 +162,17 @@
       "id": "collection:DEulkJ-qDySv_BFKQvJEj315-x5JdnFObku8DXk4iKI",
       "max-size": 0,
       "name": "energetic-plots",
-      "operator-guard": (read-msg 'cp-mint-guard),
+      "operator-guard": (read-msg "cp-mint-guard"),
       "size": 1
     }
-    (marmalade-v2.collection-policy-v1.get-collection "collection:DEulkJ-qDySv_BFKQvJEj315-x5JdnFObku8DXk4iKI")
+    (marmalade.collection-policy-v1.get-collection "collection:DEulkJ-qDySv_BFKQvJEj315-x5JdnFObku8DXk4iKI")
   )
 (commit-tx)
 
 (begin-tx "Minting plots in energetic-dao collection")
-  (use marmalade-v2.ledger)
-  (use marmalade-v2.policy-manager)
-  (use marmalade-v2.collection-policy-v1)
+  (use marmalade.ledger)
+  (use marmalade.policy-manager)
+  (use marmalade.collection-policy-v1)
 
   (env-data
     {
@@ -198,9 +197,9 @@
       {
         'key: 'dao,
         'caps: [
-          (marmalade-v2.ledger.MINT "t:sUgN41sOL5__C2ghLsDqWGaP56JpSzSl8ZZBTUvnIMQ" "k:dao" 1.0)
-          (marmalade-v2.collection-policy-v1.MINT "t:sUgN41sOL5__C2ghLsDqWGaP56JpSzSl8ZZBTUvnIMQ")
-          (marmalade-v2.non-fungible-policy-v1.MINT "t:sUgN41sOL5__C2ghLsDqWGaP56JpSzSl8ZZBTUvnIMQ")
+          (marmalade.ledger.MINT "t:L514xxmBpiINWZTWSKmjldayZmgZgDTYXAMsn3tdOGw" "k:dao" 1.0)
+          (marmalade.collection-policy-v1.MINT "t:L514xxmBpiINWZTWSKmjldayZmgZgDTYXAMsn3tdOGw")
+          (marmalade.non-fungible-policy-v1.MINT "t:L514xxmBpiINWZTWSKmjldayZmgZgDTYXAMsn3tdOGw")
         ]
       }
     ]
@@ -208,7 +207,7 @@
 
   (expect "Minting Plot #1"
     true
-    (marmalade-v2.ledger.mint "t:sUgN41sOL5__C2ghLsDqWGaP56JpSzSl8ZZBTUvnIMQ" "k:dao" (read-keyset "cp-mint-guard") 1.0)
+    (marmalade.ledger.mint "t:L514xxmBpiINWZTWSKmjldayZmgZgDTYXAMsn3tdOGw" "k:dao" (read-keyset "cp-mint-guard") 1.0)
   )
 
 (commit-tx)

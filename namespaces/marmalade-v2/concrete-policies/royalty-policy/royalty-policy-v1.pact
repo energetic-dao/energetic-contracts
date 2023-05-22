@@ -5,11 +5,11 @@
   @doc "Concrete policy to support royalty payouts in a specified fungible during sale."
 
   (defcap GOVERNANCE ()
-    (enforce-guard (keyset-ref-guard "marmalade-v2.marmalade-admin")))
+    (enforce-guard (keyset-ref-guard "marmalade.marmalade-admin")))
 
-  (use marmalade-v2.policy-manager)
-  (use marmalade-v2.fungible-quote-policy-v1)
-  (use marmalade-v2.fungible-quote-policy-interface-v1 [quote-spec quote-schema])
+  (use marmalade.policy-manager)
+  (use marmalade.fungible-quote-policy-v1)
+  (use marmalade.fungible-quote-policy-interface-v1 [quote-spec quote-schema])
   (implements kip.token-policy-v2)
   (use kip.token-policy-v2 [token-info QUOTE_POLICY])
 
@@ -41,7 +41,7 @@
   )
 
   (defun enforce-ledger:bool ()
-     (enforce-guard (marmalade-v2.ledger.ledger-guard))
+     (enforce-guard (marmalade.ledger.ledger-guard))
   )
 
   (defun enforce-init:bool
@@ -113,7 +113,7 @@
       , 'creator:= creator:string
       , 'royalty-rate:= royalty-rate:decimal
       }
-      (let* ( (quote-policy:module{marmalade-v2.fungible-quote-policy-interface-v1} (marmalade-v2.policy-manager.get-concrete-policy QUOTE_POLICY))
+      (let* ( (quote-policy:module{marmalade.fungible-quote-policy-interface-v1} (marmalade.policy-manager.get-concrete-policy QUOTE_POLICY))
               (quote:object{quote-schema} (quote-policy::get-quote sale-id))
               (spec:object{quote-spec} (at 'spec quote))
               (price:decimal (at 'price spec))

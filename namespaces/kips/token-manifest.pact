@@ -1,7 +1,7 @@
 (module token-manifest GOVERNANCE
 
   (defcap GOVERNANCE ()
-    (enforce-guard (keyset-ref-guard "marmalade-v2.marmalade-admin" ))
+    (enforce-guard (keyset-ref-guard "marmalade.marmalade-admin" ))
   )
 
   (defschema mf-uri

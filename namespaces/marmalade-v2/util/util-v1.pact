@@ -4,7 +4,7 @@
   (use kip.token-policy-v2 [token-policies concrete-policy QUOTE_POLICY NON_FUNGIBLE_POLICY ROYALTY_POLICY COLLECTION_POLICY])
 
   (defcap GOVERNANCE ()
-    (enforce-guard (keyset-ref-guard "marmalade-v2.marmalade-admin")))
+    (enforce-guard (keyset-ref-guard "marmalade.marmalade-admin")))
 
   (defconst DEFAULT:object{concrete-policy}
     { 'quote-policy: true

@@ -4,7 +4,7 @@
       'marmalade-admin: ["marmalade-admin"],
       'marmalade-ns-user: ["marmalade-admin"],
       'marmalade-ns-admin: ["marmalade-admin"],
-      'ns: 'marmalade-v2,
+      'ns: 'marmalade,
       'upgrade: false
     }
   )
@@ -20,7 +20,7 @@
 
   (define-namespace (read-msg 'ns) (read-keyset 'marmalade-admin )(read-keyset 'marmalade-admin ))
   (namespace (read-msg 'ns))
-  (define-keyset "marmalade-v2.marmalade-admin" (read-keyset "marmalade-admin" ))
+  (define-keyset "marmalade.marmalade-admin" (read-keyset "marmalade-admin" ))
 
 
   (load "./concrete-policies/fungible-quote-policy/fungible-quote-policy-interface-v1.pact")
