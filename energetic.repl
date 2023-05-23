@@ -45,7 +45,7 @@
 
   (expect "Initializing energetic-plots collection"
     true
-    (create-collection "energetic-plots" 0 (read-keyset "dao"))
+    (create-collection "energetic-plots" 5 (read-keyset "dao"))
   )
 
   (expect "Generation of energetic-plots collection"
@@ -88,14 +88,14 @@
 
   (env-data
     {
-      "collection-id": "collection:DEulkJ-qDySv_BFKQvJEj315-x5JdnFObku8DXk4iKI",
-      "cp-mint-guard": {
-        "keys": ["dao"],
-        "pred": "keys-all"
+      'collection-id: "collection:DEulkJ-qDySv_BFKQvJEj315-x5JdnFObku8DXk4iKI",
+      'cp-mint-guard: {
+        'keys: ["dao"],
+        'pred: "keys-all"
       },
-      "nfp-mint-guard": {
-        "keys": ["dao"],
-        "pred": "keys-all"
+      'nfp-mint-guard: {
+        'keys: ["dao"],
+        'pred: "keys-all"
       }
     }
   )
@@ -128,16 +128,16 @@
         'keys: ["dao"],
         'pred: "keys-all"
       },
-      "cp-mint-guard": {
-        "keys": ["dao"],
-        "pred": "keys-all"
+      'cp-mint-guard: {
+        'keys: ["dao"],
+        'pred: "keys-all"
       },
-      "nfp-mint-guard": {
-        "keys": ["dao"],
-        "pred": "keys-all"
+      'nfp-mint-guard: {
+        'keys: ["dao"],
+        'pred: "keys-all"
       },
-      "plot-one-token-id": (create-token-id { 'uri: "plot-1-uri", 'precision: 0, 'policies: energetic-constants.PLOT_COLLECTION_POLICIES }),
-      "item-manifest": {
+      'plot-one-token-id: (create-token-id { 'uri: "plot-1-uri", 'precision: 0, 'policies: energetic-constants.PLOT_COLLECTION_POLICIES }),
+      'item-manifest: {
         'manifest: (kip.token-manifest.create-manifest (kip.token-manifest.uri "text" "@todo") [
           (kip.token-manifest.create-datum (kip.token-manifest.uri "text" "json")
             {
@@ -206,7 +206,7 @@
   (expect "Validate energetic-plot collection"
     {
       "id": "collection:DEulkJ-qDySv_BFKQvJEj315-x5JdnFObku8DXk4iKI",
-      "max-size": 0,
+      "max-size": 5,
       "name": "energetic-plots",
       "operator-guard": (read-msg "cp-mint-guard"),
       "size": 1
@@ -226,13 +226,13 @@
         'keys: ["dao"],
         'pred: "keys-all"
       },
-      "cp-mint-guard": {
-        "keys": ["dao"],
-        "pred": "keys-all"
+      'cp-mint-guard: {
+        'keys: ["dao"],
+        'pred: "keys-all"
       },
-      "nfp-mint-guard": {
-        "keys": ["dao"],
-        "pred": "keys-all"
+      'nfp-mint-guard: {
+        'keys: ["dao"],
+        'pred: "keys-all"
       },
       "collection-id": "collection:DEulkJ-qDySv_BFKQvJEj315-x5JdnFObku8DXk4iKI"
     }
@@ -257,3 +257,51 @@
   )
 
 (commit-tx)
+
+(begin-tx "Minting plot validation in energetic-dao collection")
+  (use marmalade.ledger)
+  (use marmalade.policy-manager)
+  (use marmalade.collection-policy-v1)
+
+  (env-data
+    {
+      'dao: {
+        'keys: ["dao"],
+        'pred: "keys-all"
+      },
+      'cp-mint-guard: {
+        'keys: ["dao"],
+        'pred: "keys-all"
+      },
+      'nfp-mint-guard: {
+        'keys: ["dao"],
+        'pred: "keys-all"
+      },
+      "collection-id": "collection:DEulkJ-qDySv_BFKQvJEj315-x5JdnFObku8DXk4iKI"
+    }
+  )
+
+  (env-sigs 
+    [
+      {
+        'key: 'dao,
+        'caps: [
+          (marmalade.ledger.MINT "t:L514xxmBpiINWZTWSKmjldayZmgZgDTYXAMsn3tdOGw" "k:dao" 5.0)
+          (marmalade.ledger.MINT "t:L514xxmBpiINWZTWSKmjldayZmgZgDTYXAMsn3tdOGw" "k:dao" 1.0)
+          (marmalade.collection-policy-v1.MINT "t:L514xxmBpiINWZTWSKmjldayZmgZgDTYXAMsn3tdOGw")
+          (marmalade.non-fungible-policy-v1.MINT "t:L514xxmBpiINWZTWSKmjldayZmgZgDTYXAMsn3tdOGw")
+        ]
+      }
+    ]
+  )
+
+  (expect-failure "Minting multiple Plot #1"
+    "Mint can only be 1"
+    (marmalade.ledger.mint "t:L514xxmBpiINWZTWSKmjldayZmgZgDTYXAMsn3tdOGw" "k:dao" (read-keyset "cp-mint-guard") 5.0)
+  )
+
+  (expect-failure "Minting duplicate Plot #1"
+    "Only one mint allowed"
+    (marmalade.ledger.mint "t:L514xxmBpiINWZTWSKmjldayZmgZgDTYXAMsn3tdOGw" "k:dao" (read-keyset "cp-mint-guard") 1.0)
+  )
+(rollback-tx)
