@@ -1,0 +1,34 @@
+(begin-tx "Marmalade V2")
+  (env-data
+    { 
+      'marmalade-admin: ["marmalade-admin"],
+      'marmalade-ns-user: ["marmalade-admin"],
+      'marmalade-ns-admin: ["marmalade-admin"],
+      'ns: 'marmalade,
+      'upgrade: false
+    }
+  )
+  
+  (env-sigs
+    [
+      { 
+        'key: 'marmalade-admin,
+        'caps: []
+      }
+    ]
+  )
+
+  (define-namespace (read-msg 'ns) (read-keyset 'marmalade-admin )(read-keyset 'marmalade-admin ))
+  (namespace (read-msg 'ns))
+  (define-keyset "marmalade.marmalade-admin" (read-keyset "marmalade-admin" ))
+
+
+  (load "./concrete-policies/fungible-quote-policy/fungible-quote-policy-interface-v1.pact")
+  (load "./policy-manager/policy-manager.pact")
+  (load "./ledger.pact")
+
+  (load "./concrete-policies/fungible-quote-policy/fungible-quote-policy-v1.pact")
+  (load "./concrete-policies/non-fungible-policy/non-fungible-policy-v1.pact")
+  (load "./concrete-policies/royalty-policy/royalty-policy-v1.pact")
+  (load "./concrete-policies/collection-policy/collection-policy-v1.pact")
+(commit-tx)
