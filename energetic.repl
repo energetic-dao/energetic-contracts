@@ -24,6 +24,7 @@
   (define-keyset "free.energetic-admin" (read-keyset "energetic-admin"))
 
   (load "./dao/policies/energetic-upgradable-item-policy.pact")
+  (load "./dao/policies/energetic-manifest-policy.pact")
 (commit-tx)
 
 (begin-tx "Setup Plot collections")
@@ -44,7 +45,7 @@
 
   (expect "Initializing energetic-plots collection"
     true
-    (create-collection "energetic-plots" 0 (read-keyset "dao"))
+    (create-collection "energetic-plots" 5 (read-keyset "dao"))
   )
 
   (expect "Generation of energetic-plots collection"
@@ -73,7 +74,7 @@
     (defconst PLOT_COLLECTION_POLICIES:object{token-policies}
       { 
         'concrete-policies: PLOT_COLLECTION,
-        'immutable-policies: [free.energetic-upgradable-item-policy],
+        'immutable-policies: [free.energetic-upgradable-item-policy, free.energetic-manifest-policy],
         'adjustable-policies: []
       }
     )
@@ -87,14 +88,14 @@
 
   (env-data
     {
-      "collection-id": "collection:DEulkJ-qDySv_BFKQvJEj315-x5JdnFObku8DXk4iKI",
-      "cp-mint-guard": {
-        "keys": ["dao"],
-        "pred": "keys-all"
+      'collection-id: "collection:DEulkJ-qDySv_BFKQvJEj315-x5JdnFObku8DXk4iKI",
+      'cp-mint-guard: {
+        'keys: ["dao"],
+        'pred: "keys-all"
       },
-      "nfp-mint-guard": {
-        "keys": ["dao"],
-        "pred": "keys-all"
+      'nfp-mint-guard: {
+        'keys: ["dao"],
+        'pred: "keys-all"
       }
     }
   )
@@ -115,6 +116,7 @@
   (use marmalade.ledger)
   (use marmalade.policy-manager)
   (use marmalade.collection-policy-v1)
+  (use free.energetic-manifest-policy)
 
   (env-data
     {
@@ -122,13 +124,56 @@
         'keys: ["dao"],
         'pred: "keys-all"
       },
-      "cp-mint-guard": {
-        "keys": ["dao"],
-        "pred": "keys-all"
+      'dao-manifest-upgrader: {
+        'keys: ["dao"],
+        'pred: "keys-all"
       },
-      "nfp-mint-guard": {
-        "keys": ["dao"],
-        "pred": "keys-all"
+      'cp-mint-guard: {
+        'keys: ["dao"],
+        'pred: "keys-all"
+      },
+      'nfp-mint-guard: {
+        'keys: ["dao"],
+        'pred: "keys-all"
+      },
+      'plot-one-token-id: (create-token-id { 'uri: "plot-1-uri", 'precision: 0, 'policies: energetic-constants.PLOT_COLLECTION_POLICIES }),
+      'item-manifest: {
+        'manifest: (kip.token-manifest.create-manifest (kip.token-manifest.uri "text" "@todo") [
+          (kip.token-manifest.create-datum (kip.token-manifest.uri "text" "json")
+            {
+              'attributes: [
+                {
+                  'trait_type: "Plot",
+                  'value: "normal"
+                },
+                {
+                  'trait_type: "Size",
+                  'value: "large"
+                },
+                {
+                  'trait_type: "Effect",
+                  'value: "floating"
+                },
+                {
+                  'trait_type: "Panels",
+                  'value: 0
+                },
+                {
+                  'trait_type: "Wind-Turbines",
+                  'value: 0
+                }
+                {
+                  'trait_type: "Batteries",
+                  'value: 0
+                }
+              ]
+            }
+          )
+        ]),
+        'guard: {
+          'keys: ["dao"],
+          'pred: "keys-all"
+        }
       },
       "collection-id": "collection:DEulkJ-qDySv_BFKQvJEj315-x5JdnFObku8DXk4iKI",
       'ns: "free",
@@ -142,25 +187,26 @@
         'key: 'dao,
         'caps: [
           (marmalade.collection-policy-v1.OPERATOR (read-msg "collection-id"))
+          (free.energetic-manifest-policy.UPGRADE "t:L514xxmBpiINWZTWSKmjldayZmgZgDTYXAMsn3tdOGw")
         ]
       }
     ]
   )
 
-  (let
-    (
-      (plot-one-id:string (create-token-id { 'uri: "plot-1-uri", 'precision: 0, 'policies: energetic-constants.PLOT_COLLECTION_POLICIES }))
-    )
-    (expect "Create a Plot token"
-      true
-      (create-token plot-one-id 0 "plot-1-uri" energetic-constants.PLOT_COLLECTION_POLICIES)
-    )
+  (expect "Create a Plot token"
+    true
+    (create-token (read-msg "plot-one-token-id") 0 "plot-1-uri" energetic-constants.PLOT_COLLECTION_POLICIES)
+  )
+
+  (expect "Update the manifest of the Plot token"
+    "Write succeeded"
+    (upgrade-manifest (read-msg 'plot-one-token-id ) (at 'manifest (read-msg 'item-manifest )))
   )
 
   (expect "Validate energetic-plot collection"
     {
       "id": "collection:DEulkJ-qDySv_BFKQvJEj315-x5JdnFObku8DXk4iKI",
-      "max-size": 0,
+      "max-size": 5,
       "name": "energetic-plots",
       "operator-guard": (read-msg "cp-mint-guard"),
       "size": 1
@@ -180,13 +226,13 @@
         'keys: ["dao"],
         'pred: "keys-all"
       },
-      "cp-mint-guard": {
-        "keys": ["dao"],
-        "pred": "keys-all"
+      'cp-mint-guard: {
+        'keys: ["dao"],
+        'pred: "keys-all"
       },
-      "nfp-mint-guard": {
-        "keys": ["dao"],
-        "pred": "keys-all"
+      'nfp-mint-guard: {
+        'keys: ["dao"],
+        'pred: "keys-all"
       },
       "collection-id": "collection:DEulkJ-qDySv_BFKQvJEj315-x5JdnFObku8DXk4iKI"
     }
@@ -211,3 +257,51 @@
   )
 
 (commit-tx)
+
+(begin-tx "Minting plot validation in energetic-dao collection")
+  (use marmalade.ledger)
+  (use marmalade.policy-manager)
+  (use marmalade.collection-policy-v1)
+
+  (env-data
+    {
+      'dao: {
+        'keys: ["dao"],
+        'pred: "keys-all"
+      },
+      'cp-mint-guard: {
+        'keys: ["dao"],
+        'pred: "keys-all"
+      },
+      'nfp-mint-guard: {
+        'keys: ["dao"],
+        'pred: "keys-all"
+      },
+      "collection-id": "collection:DEulkJ-qDySv_BFKQvJEj315-x5JdnFObku8DXk4iKI"
+    }
+  )
+
+  (env-sigs 
+    [
+      {
+        'key: 'dao,
+        'caps: [
+          (marmalade.ledger.MINT "t:L514xxmBpiINWZTWSKmjldayZmgZgDTYXAMsn3tdOGw" "k:dao" 5.0)
+          (marmalade.ledger.MINT "t:L514xxmBpiINWZTWSKmjldayZmgZgDTYXAMsn3tdOGw" "k:dao" 1.0)
+          (marmalade.collection-policy-v1.MINT "t:L514xxmBpiINWZTWSKmjldayZmgZgDTYXAMsn3tdOGw")
+          (marmalade.non-fungible-policy-v1.MINT "t:L514xxmBpiINWZTWSKmjldayZmgZgDTYXAMsn3tdOGw")
+        ]
+      }
+    ]
+  )
+
+  (expect-failure "Minting multiple Plot #1"
+    "Mint can only be 1"
+    (marmalade.ledger.mint "t:L514xxmBpiINWZTWSKmjldayZmgZgDTYXAMsn3tdOGw" "k:dao" (read-keyset "cp-mint-guard") 5.0)
+  )
+
+  (expect-failure "Minting duplicate Plot #1"
+    "Only one mint allowed"
+    (marmalade.ledger.mint "t:L514xxmBpiINWZTWSKmjldayZmgZgDTYXAMsn3tdOGw" "k:dao" (read-keyset "cp-mint-guard") 1.0)
+  )
+(rollback-tx)
