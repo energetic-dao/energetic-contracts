@@ -305,3 +305,131 @@
     (marmalade.ledger.mint "t:L514xxmBpiINWZTWSKmjldayZmgZgDTYXAMsn3tdOGw" "k:dao" (read-keyset "cp-mint-guard") 1.0)
   )
 (rollback-tx)
+
+(begin-tx "Setting coin balances")
+  (env-data
+    {
+      'dao: {
+          'keys: ["dao"],
+          'pred: "keys-all"
+      },
+      'user: {
+        'keys: ["user"],
+        'pred: "keys-all"
+      }
+    }
+  )
+
+  (env-sigs 
+    [
+      { 
+        'key: "admin",
+        'caps: [
+          (coin.COINBASE)
+        ]
+      },
+      { 
+        'key: "user",
+        'caps: [
+          (coin.COINBASE)
+        ]
+      }
+    ]
+  )
+  (test-capability (coin.COINBASE ))
+  (coin.create-account "k:dao" (read-keyset "dao"))
+  (coin.create-account "k:user" (read-keyset "user"))
+
+  (coin.coinbase "k:user" (read-keyset "user") 100.0)
+
+  (expect "k:user balance is 100.0" (coin.get-balance "k:user") 100.0)
+  (expect "k:dao balance is 0.0" (coin.get-balance "k:dao") 0.0)
+(commit-tx)
+
+(begin-tx "Marketplace actions for Plot energetic-plots collection")
+  (use marmalade.ledger)
+  (use marmalade.policy-manager)
+  (use marmalade.collection-policy-v1)
+  (use marmalade.fungible-quote-policy-v1)
+
+  (env-data
+    {
+      'dao: {
+        'keys: ["dao"],
+        'pred: "keys-all"
+      },
+      'user: {
+        'keys: ["user"],
+        'pred: "keys-all"
+      },
+      "quote": {
+        'fungible: coin,
+        'price: 100.0,
+        'recipient: "k:dao",
+        'recipient-guard: {
+          'keys: ["dao"], 
+          'pred: "keys-all"
+        }
+      },
+      'marketplace-fee: {
+        'marketplace-account: "",
+        'mk-fee-percentage: 0.0
+      },
+      'buyer: "k:user",
+      'buyer-guard: { 
+        'keys: ["user"],
+        'pred: "keys-all"
+      },
+      "collection-id": "collection:DEulkJ-qDySv_BFKQvJEj315-x5JdnFObku8DXk4iKI"
+    }
+  )
+
+  (env-sigs 
+    [
+      {
+        'key: 'dao,
+        'caps: [
+          (marmalade.ledger.OFFER "t:L514xxmBpiINWZTWSKmjldayZmgZgDTYXAMsn3tdOGw" "k:dao" 1.0 (time "2024-05-23T00:00:00Z"))
+        ]
+      },
+      {
+        'key: 'user,
+        'caps: [
+          (BUY "t:L514xxmBpiINWZTWSKmjldayZmgZgDTYXAMsn3tdOGw" "k:dao" "k:user"  1.0 (time "2024-05-23T00:00:00Z") "DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g")
+          (coin.TRANSFER "k:user" "c:0ChSqSoWjhPTv0RdCeEqRZFdlz4RS1sbLc6og9V9P8A" 100.0)
+        ]
+      }
+    ]
+  )
+
+  (expect "Setting Quote as DAO for plot #1"
+    true
+    (marmalade.ledger.sale "t:L514xxmBpiINWZTWSKmjldayZmgZgDTYXAMsn3tdOGw" "k:dao" 1.0 (time "2024-05-23T00:00:00Z"))
+  )
+
+  (expect "Buying Quote from DAO as User for plot #1"
+    true
+    (continue-pact 1)
+  )
+  
+  (expect "k:user balance of Plot #1 to be 1.0"
+    1.0
+    (marmalade.ledger.get-balance "t:L514xxmBpiINWZTWSKmjldayZmgZgDTYXAMsn3tdOGw" "k:user")
+  )
+
+  (expect "k:user balance of coin to be 0.0"
+    0.0
+    (coin.get-balance "k:user")
+  )
+
+  (expect "k:dao balance of Plot #1 to be 0.0"
+    0.0
+    (marmalade.ledger.get-balance "t:L514xxmBpiINWZTWSKmjldayZmgZgDTYXAMsn3tdOGw" "k:dao")
+  )
+
+  (expect "k:dao balance of coin to be 100.0"
+    100.0
+    (coin.get-balance "k:dao")
+  )
+
+(commit-tx)
