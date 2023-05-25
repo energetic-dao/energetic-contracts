@@ -1,5 +1,4 @@
 (namespace (read-msg 'ns))
-
 (module energetic-manifest-policy GOVERNANCE
 
   (implements kip.token-policy-v2)
@@ -16,7 +15,7 @@
     guard:guard
   )
 
-  (deftable manifests:{item-manifest})
+  (deftable manifest-table:{item-manifest})
 
   ;;
   ;; Capabilities
@@ -28,7 +27,7 @@
 
   (defcap UPGRADE (token-id:string)
     @managed
-    (with-read manifests token-id 
+    (with-read manifest-table token-id 
       {
         'guard := manifest-guard
       }
@@ -45,7 +44,7 @@
   )
 
   (defun get-manifest:object{manifest} (token-id:string)
-    (with-read manifests token-id 
+    (with-read manifest-table token-id 
       {
         'manifest := manifest
       }
@@ -56,7 +55,7 @@
   (defun upgrade-manifest (token-id:string manifest:object{manifest})
     (with-capability (UPGRADE token-id)
       (enforce-verify-manifest manifest)
-      (update manifests token-id
+      (update manifest-table token-id
         {
           'manifest: manifest
         }
@@ -75,7 +74,7 @@
         (manifest:object{item-manifest} (read-msg "item-manifest"))
       )
       (enforce-verify-manifest (at 'manifest manifest))
-      (insert manifests (at 'id token) manifest)
+      (insert manifest-table (at 'id token) manifest)
     )
   )
 
@@ -109,9 +108,24 @@
   )
 )
 
+;;
+;; Getters
+;;
+
+;(defun get-token-manifest:object{manifest} (token-id:string)
+;  (with-read manifest-table token-id 
+;    {
+;      'manifest:= manifest
+;    }
+;    {
+;      'manifest: manifest
+;    }
+;  )
+;)
+
 (if (read-msg 'upgrade)
   ["upgrade complete"]
   [
-    (create-table manifests)
+    (create-table manifest-table)
   ]
 )
