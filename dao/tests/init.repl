@@ -1,0 +1,5 @@
+(print "Setting up test environment...")
+(load "./ns.repl")
+
+(print "Running tests...")
+(load "./colection-test.repl")

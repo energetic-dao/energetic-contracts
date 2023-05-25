@@ -1,0 +1,27 @@
+(begin-tx "Loading Energetic namespace")
+  (env-data
+    {
+      'energetic-admin: ["energetic-admin"],
+      'ns: "test",
+      'upgrade: false
+    }
+  )
+
+  (env-sigs
+    [
+      {
+        'key: 'energetic-admin,
+        'caps: []
+      }
+    ]
+  )
+
+  (define-namespace (read-msg 'ns ) (read-keyset "energetic-admin" ) (read-keyset "energetic-admin"))
+  (namespace (read-msg 'ns ))
+  (define-keyset "test.energetic-admin" (read-keyset "energetic-admin"))
+
+  (load "../policies/energetic-upgradable-item-policy.pact")
+  (load "../policies/energetic-manifest-policy.pact")
+
+  (load "./constants/collection.repl")
+(commit-tx)

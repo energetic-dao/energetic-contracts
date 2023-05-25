@@ -1,90 +1,14 @@
 (print "Initializing module namespaces")
 (load "./namespaces/ns.repl")
 
-(begin-tx "Loading Energetic namespace")
-  (env-data
-    {
-      'energetic-admin: ["energetic-admin"],
-      'ns: "free",
-      'upgrade: false
-    }
-  )
-
-  (env-sigs
-    [
-      {
-        'key: 'energetic-admin,
-        'caps: []
-      }
-    ]
-  )
-
-  (define-namespace (read-msg 'ns ) (read-keyset "energetic-admin" ) (read-keyset "energetic-admin"))
-  (namespace (read-msg 'ns ))
-  (define-keyset "free.energetic-admin" (read-keyset "energetic-admin"))
-
-  (load "./dao/policies/energetic-upgradable-item-policy.pact")
-  (load "./dao/policies/energetic-manifest-policy.pact")
-(commit-tx)
-
-(begin-tx "Setup Plot collections")
-  (use marmalade.ledger)
-  (use marmalade.policy-manager)
-  (use marmalade.collection-policy-v1)
-
-  (env-data
-    {
-      'dao: {
-        'keys: ["dao"],
-        'pred: "keys-all"
-      },
-      'ns: "free",
-      'upgrade: false
-    }
-  )
-
-  (expect "Initializing energetic-plots collection"
-    true
-    (create-collection "energetic-plots" 5 (read-keyset "dao"))
-  )
-
-  (expect "Generation of energetic-plots collection"
-    "collection:DEulkJ-qDySv_BFKQvJEj315-x5JdnFObku8DXk4iKI"
-    (create-collection-id "energetic-plots")
-  )
-
-  (get-collections)
-(commit-tx)
-
-(begin-tx "Setup Plot collection policies")
-  (use kip.token-policy-v2 [token-policies concrete-policy])
-
-  (module energetic-constants GOVERNANCE
-    (defcap GOVERNANCE () true)
-    
-    (defconst PLOT_COLLECTION:object{concrete-policy}
-      { 
-        'quote-policy: true,
-        'non-fungible-policy: true,
-        'royalty-policy: false, ; @todo
-        'collection-policy: true
-      }
-    )
-
-    (defconst PLOT_COLLECTION_POLICIES:object{token-policies}
-      { 
-        'concrete-policies: PLOT_COLLECTION,
-        'immutable-policies: [free.energetic-upgradable-item-policy, free.energetic-manifest-policy],
-        'adjustable-policies: []
-      }
-    )
-  )
-(commit-tx)
+(print "Testing electric-dao contracts")
+(load "./dao/tests/init.repl")
 
 (begin-tx "Create Plot for collection")
   (use marmalade.ledger)
   (use marmalade.policy-manager)
   (use marmalade.collection-policy-v1)
+  (use test.energetic-constants)
 
   (env-data
     {
@@ -102,11 +26,11 @@
 
   (let
     (
-      (plot-one-id:string (create-token-id { 'uri: "plot-1-uri", 'precision: 0, 'policies: energetic-constants.PLOT_COLLECTION_POLICIES }))
+      (plot-one-id:string (create-token-id { 'uri: "plot-1-uri", 'precision: 0, 'policies: test.energetic-constants.PLOT_COLLECTION_POLICIES }))
     )
     (expect-failure "Cannot create a plot #1 without operator guard"
       "Keyset failure (keys-all): [dao]"
-      (create-token plot-one-id 0 "plot-1-uri" energetic-constants.PLOT_COLLECTION_POLICIES)
+      (create-token plot-one-id 0 "plot-1-uri" test.energetic-constants.PLOT_COLLECTION_POLICIES)
     )
   )
 (rollback-tx)
@@ -116,7 +40,8 @@
   (use marmalade.ledger)
   (use marmalade.policy-manager)
   (use marmalade.collection-policy-v1)
-  (use free.energetic-manifest-policy)
+  (use test.energetic-manifest-policy)
+  (use test.energetic-constants)
 
   (env-data
     {
@@ -136,47 +61,16 @@
         'keys: ["dao"],
         'pred: "keys-all"
       },
-      'plot-one-token-id: (create-token-id { 'uri: "plot-1-uri", 'precision: 0, 'policies: energetic-constants.PLOT_COLLECTION_POLICIES }),
+      'plot-one-token-id: (create-token-id { 'uri: "plot-1-uri", 'precision: 0, 'policies: test.energetic-constants.PLOT_COLLECTION_POLICIES }),
       'item-manifest: {
-        'manifest: (kip.token-manifest.create-manifest (kip.token-manifest.uri "text" "@todo") [
-          (kip.token-manifest.create-datum (kip.token-manifest.uri "text" "json")
-            {
-              'attributes: [
-                {
-                  'trait_type: "Plot",
-                  'value: "normal"
-                },
-                {
-                  'trait_type: "Size",
-                  'value: "large"
-                },
-                {
-                  'trait_type: "Effect",
-                  'value: "floating"
-                },
-                {
-                  'trait_type: "Panels",
-                  'value: 0
-                },
-                {
-                  'trait_type: "Wind-Turbines",
-                  'value: 0
-                }
-                {
-                  'trait_type: "Batteries",
-                  'value: 0
-                }
-              ]
-            }
-          )
-        ]),
+        'manifest: test.energetic-constants.PLOT_MANIFEST,
         'guard: {
           'keys: ["dao"],
           'pred: "keys-all"
         }
       },
       "collection-id": "collection:DEulkJ-qDySv_BFKQvJEj315-x5JdnFObku8DXk4iKI",
-      'ns: "free",
+      'ns: "test",
       'upgrade: false
     }
   )
@@ -187,7 +81,7 @@
         'key: 'dao,
         'caps: [
           (marmalade.collection-policy-v1.OPERATOR (read-msg "collection-id"))
-          (free.energetic-manifest-policy.UPGRADE "t:L514xxmBpiINWZTWSKmjldayZmgZgDTYXAMsn3tdOGw")
+          (test.energetic-manifest-policy.UPGRADE "t:8FZFf-y--ZSWwTuERux5v0wYPAWbYeCv9rNGlpkTPgw")
         ]
       }
     ]
@@ -195,7 +89,7 @@
 
   (expect "Create a Plot token"
     true
-    (create-token (read-msg "plot-one-token-id") 0 "plot-1-uri" energetic-constants.PLOT_COLLECTION_POLICIES)
+    (create-token (read-msg "plot-one-token-id") 0 "plot-1-uri" test.energetic-constants.PLOT_COLLECTION_POLICIES)
   )
 
   (expect "Update the manifest of the Plot token"
@@ -243,9 +137,9 @@
       {
         'key: 'dao,
         'caps: [
-          (marmalade.ledger.MINT "t:L514xxmBpiINWZTWSKmjldayZmgZgDTYXAMsn3tdOGw" "k:dao" 1.0)
-          (marmalade.collection-policy-v1.MINT "t:L514xxmBpiINWZTWSKmjldayZmgZgDTYXAMsn3tdOGw")
-          (marmalade.non-fungible-policy-v1.MINT "t:L514xxmBpiINWZTWSKmjldayZmgZgDTYXAMsn3tdOGw")
+          (marmalade.ledger.MINT "t:8FZFf-y--ZSWwTuERux5v0wYPAWbYeCv9rNGlpkTPgw" "k:dao" 1.0)
+          (marmalade.collection-policy-v1.MINT "t:8FZFf-y--ZSWwTuERux5v0wYPAWbYeCv9rNGlpkTPgw")
+          (marmalade.non-fungible-policy-v1.MINT "t:8FZFf-y--ZSWwTuERux5v0wYPAWbYeCv9rNGlpkTPgw")
         ]
       }
     ]
@@ -253,7 +147,7 @@
 
   (expect "Minting Plot #1"
     true
-    (marmalade.ledger.mint "t:L514xxmBpiINWZTWSKmjldayZmgZgDTYXAMsn3tdOGw" "k:dao" (read-keyset "cp-mint-guard") 1.0)
+    (marmalade.ledger.mint "t:8FZFf-y--ZSWwTuERux5v0wYPAWbYeCv9rNGlpkTPgw" "k:dao" (read-keyset "cp-mint-guard") 1.0)
   )
 
 (commit-tx)
@@ -286,10 +180,10 @@
       {
         'key: 'dao,
         'caps: [
-          (marmalade.ledger.MINT "t:L514xxmBpiINWZTWSKmjldayZmgZgDTYXAMsn3tdOGw" "k:dao" 5.0)
-          (marmalade.ledger.MINT "t:L514xxmBpiINWZTWSKmjldayZmgZgDTYXAMsn3tdOGw" "k:dao" 1.0)
-          (marmalade.collection-policy-v1.MINT "t:L514xxmBpiINWZTWSKmjldayZmgZgDTYXAMsn3tdOGw")
-          (marmalade.non-fungible-policy-v1.MINT "t:L514xxmBpiINWZTWSKmjldayZmgZgDTYXAMsn3tdOGw")
+          (marmalade.ledger.MINT "t:8FZFf-y--ZSWwTuERux5v0wYPAWbYeCv9rNGlpkTPgw" "k:dao" 5.0)
+          (marmalade.ledger.MINT "t:8FZFf-y--ZSWwTuERux5v0wYPAWbYeCv9rNGlpkTPgw" "k:dao" 1.0)
+          (marmalade.collection-policy-v1.MINT "t:8FZFf-y--ZSWwTuERux5v0wYPAWbYeCv9rNGlpkTPgw")
+          (marmalade.non-fungible-policy-v1.MINT "t:8FZFf-y--ZSWwTuERux5v0wYPAWbYeCv9rNGlpkTPgw")
         ]
       }
     ]
@@ -297,12 +191,12 @@
 
   (expect-failure "Minting multiple Plot #1"
     "Mint can only be 1"
-    (marmalade.ledger.mint "t:L514xxmBpiINWZTWSKmjldayZmgZgDTYXAMsn3tdOGw" "k:dao" (read-keyset "cp-mint-guard") 5.0)
+    (marmalade.ledger.mint "t:8FZFf-y--ZSWwTuERux5v0wYPAWbYeCv9rNGlpkTPgw" "k:dao" (read-keyset "cp-mint-guard") 5.0)
   )
 
   (expect-failure "Minting duplicate Plot #1"
     "Only one mint allowed"
-    (marmalade.ledger.mint "t:L514xxmBpiINWZTWSKmjldayZmgZgDTYXAMsn3tdOGw" "k:dao" (read-keyset "cp-mint-guard") 1.0)
+    (marmalade.ledger.mint "t:8FZFf-y--ZSWwTuERux5v0wYPAWbYeCv9rNGlpkTPgw" "k:dao" (read-keyset "cp-mint-guard") 1.0)
   )
 (rollback-tx)
 
@@ -389,13 +283,13 @@
       {
         'key: 'dao,
         'caps: [
-          (marmalade.ledger.OFFER "t:L514xxmBpiINWZTWSKmjldayZmgZgDTYXAMsn3tdOGw" "k:dao" 1.0 (time "2024-05-23T00:00:00Z"))
+          (marmalade.ledger.OFFER "t:8FZFf-y--ZSWwTuERux5v0wYPAWbYeCv9rNGlpkTPgw" "k:dao" 1.0 (time "2024-05-23T00:00:00Z"))
         ]
       },
       {
         'key: 'user,
         'caps: [
-          (BUY "t:L514xxmBpiINWZTWSKmjldayZmgZgDTYXAMsn3tdOGw" "k:dao" "k:user"  1.0 (time "2024-05-23T00:00:00Z") "DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g")
+          (BUY "t:8FZFf-y--ZSWwTuERux5v0wYPAWbYeCv9rNGlpkTPgw" "k:dao" "k:user"  1.0 (time "2024-05-23T00:00:00Z") "DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g")
           (coin.TRANSFER "k:user" "c:0ChSqSoWjhPTv0RdCeEqRZFdlz4RS1sbLc6og9V9P8A" 100.0)
         ]
       }
@@ -404,7 +298,7 @@
 
   (expect "Setting Quote as DAO for plot #1"
     true
-    (marmalade.ledger.sale "t:L514xxmBpiINWZTWSKmjldayZmgZgDTYXAMsn3tdOGw" "k:dao" 1.0 (time "2024-05-23T00:00:00Z"))
+    (marmalade.ledger.sale "t:8FZFf-y--ZSWwTuERux5v0wYPAWbYeCv9rNGlpkTPgw" "k:dao" 1.0 (time "2024-05-23T00:00:00Z"))
   )
 
   (expect "Buying Quote from DAO as User for plot #1"
@@ -414,7 +308,7 @@
   
   (expect "k:user balance of Plot #1 to be 1.0"
     1.0
-    (marmalade.ledger.get-balance "t:L514xxmBpiINWZTWSKmjldayZmgZgDTYXAMsn3tdOGw" "k:user")
+    (marmalade.ledger.get-balance "t:8FZFf-y--ZSWwTuERux5v0wYPAWbYeCv9rNGlpkTPgw" "k:user")
   )
 
   (expect "k:user balance of coin to be 0.0"
@@ -424,12 +318,12 @@
 
   (expect "k:dao balance of Plot #1 to be 0.0"
     0.0
-    (marmalade.ledger.get-balance "t:L514xxmBpiINWZTWSKmjldayZmgZgDTYXAMsn3tdOGw" "k:dao")
+    (marmalade.ledger.get-balance "t:8FZFf-y--ZSWwTuERux5v0wYPAWbYeCv9rNGlpkTPgw" "k:dao")
   )
 
   (expect "k:dao balance of coin to be 100.0"
     100.0
     (coin.get-balance "k:dao")
   )
-
+  (get-tokens)
 (commit-tx)

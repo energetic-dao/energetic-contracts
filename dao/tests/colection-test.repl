@@ -1,0 +1,26 @@
+(begin-tx "Setup Plot collections")
+  (use marmalade.ledger)
+  (use marmalade.policy-manager)
+  (use marmalade.collection-policy-v1)
+
+  (env-data
+    {
+      'dao: {
+        'keys: ["dao"],
+        'pred: "keys-all"
+      },
+      'ns: "test",
+      'upgrade: false
+    }
+  )
+
+  (expect "Initializing energetic-plots collection"
+    true
+    (create-collection "energetic-plots" 5 (read-keyset "dao"))
+  )
+
+  (expect "Generation of energetic-plots collection"
+    "collection:DEulkJ-qDySv_BFKQvJEj315-x5JdnFObku8DXk4iKI"
+    (create-collection-id "energetic-plots")
+  )
+(commit-tx)
