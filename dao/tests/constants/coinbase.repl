@@ -1,0 +1,39 @@
+(begin-tx "Setting coin balances")
+  (env-data
+    {
+      'dao: {
+          'keys: ["dao"],
+          'pred: "keys-all"
+      },
+      'user: {
+        'keys: ["user"],
+        'pred: "keys-all"
+      }
+    }
+  )
+
+  (env-sigs 
+    [
+      { 
+        'key: "admin",
+        'caps: [
+          (coin.COINBASE)
+        ]
+      },
+      { 
+        'key: "user",
+        'caps: [
+          (coin.COINBASE)
+        ]
+      }
+    ]
+  )
+  (test-capability (coin.COINBASE ))
+  (coin.create-account "k:dao" (read-keyset "dao"))
+  (coin.create-account "k:user" (read-keyset "user"))
+
+  (coin.coinbase "k:user" (read-keyset "user") 100.0)
+
+  (expect "k:user balance is 100.0" (coin.get-balance "k:user") 100.0)
+  (expect "k:dao balance is 0.0" (coin.get-balance "k:dao") 0.0)
+(commit-tx)

@@ -2,6 +2,7 @@
   (use marmalade.ledger)
   (use marmalade.policy-manager)
   (use marmalade.collection-policy-v1)
+  (use test.energetic-constants)
 
   (env-data
     {
@@ -20,7 +21,107 @@
   )
 
   (expect "Generation of energetic-plots collection"
-    "collection:DEulkJ-qDySv_BFKQvJEj315-x5JdnFObku8DXk4iKI"
+    PLOT_COLLECTION_ID
     (create-collection-id "energetic-plots")
+  )
+(commit-tx)
+
+(begin-tx "Create Plot for collection")
+  (use marmalade.ledger)
+  (use marmalade.policy-manager)
+  (use marmalade.collection-policy-v1)
+  (use test.energetic-constants)
+
+  (env-data
+    {
+      'collection-id: PLOT_COLLECTION_ID,
+      'cp-mint-guard: {
+        'keys: ["dao"],
+        'pred: "keys-all"
+      },
+      'nfp-mint-guard: {
+        'keys: ["dao"],
+        'pred: "keys-all"
+      }
+    }
+  )
+
+  (expect-failure "Cannot create a plot #1 without operator guard"
+    "Keyset failure (keys-all): [dao]"
+    (create-token PLOT_ONE_TOKEN_ID 0 "plot-1-uri" PLOT_COLLECTION_POLICIES)
+  )
+  
+(rollback-tx)
+
+
+(begin-tx "Create Plot for collection")
+  (use marmalade.ledger)
+  (use marmalade.policy-manager)
+  (use marmalade.collection-policy-v1)
+  (use test.energetic-manifest-policy)
+  (use test.energetic-constants)
+
+  (env-data
+    {
+      'dao: {
+        'keys: ["dao"],
+        'pred: "keys-all"
+      },
+      'dao-manifest-upgrader: {
+        'keys: ["dao"],
+        'pred: "keys-all"
+      },
+      'cp-mint-guard: {
+        'keys: ["dao"],
+        'pred: "keys-all"
+      },
+      'nfp-mint-guard: {
+        'keys: ["dao"],
+        'pred: "keys-all"
+      },
+      'item-manifest: {
+        'manifest: PLOT_MANIFEST,
+        'guard: {
+          'keys: ["dao"],
+          'pred: "keys-all"
+        }
+      },
+      "collection-id": PLOT_COLLECTION_ID,
+      'ns: "test",
+      'upgrade: false
+    }
+  )
+
+  (env-sigs
+    [
+      {
+        'key: 'dao,
+        'caps: [
+          (marmalade.collection-policy-v1.OPERATOR (read-msg "collection-id"))
+          (test.energetic-manifest-policy.UPGRADE PLOT_ONE_TOKEN_ID)
+        ]
+      }
+    ]
+  )
+
+  (expect "Create a Plot #1 token"
+    true
+    (create-token PLOT_ONE_TOKEN_ID 0 "plot-1-uri" PLOT_COLLECTION_POLICIES)
+  )
+
+  (expect "Update the manifest of the Plot token"
+    "Write succeeded"
+    (upgrade-manifest PLOT_ONE_TOKEN_ID (at 'manifest (read-msg 'item-manifest )))
+  )
+
+  (expect "Validate energetic-plot collection"
+    {
+      "id": (read-msg "collection-id"),
+      "max-size": 5,
+      "name": "energetic-plots",
+      "operator-guard": (read-msg "cp-mint-guard"),
+      "size": 1
+    }
+    (marmalade.collection-policy-v1.get-collection (read-msg "collection-id"))
   )
 (commit-tx)

@@ -1,5 +1,10 @@
 (print "Setting up test environment...")
 (load "./ns.repl")
 
+(print "Setting up Coinbase")
+(load "./constants/coinbase.repl")
+
 (print "Running tests...")
 (load "./colection-test.repl")
+(load "./mint-test.repl")
+(load "./marketplace-test.repl")
