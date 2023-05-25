@@ -1,0 +1,55 @@
+(begin-tx "Lock plot token in staking pool")
+  (use marmalade.ledger)
+  (use marmalade.policy-manager)
+  (use marmalade.collection-policy-v1)
+  (use test.energetic-constants)
+  (use test.energetic-plot-staking-center)
+
+  (env-data
+    {
+      'dao: {
+        'keys: ["dao"],
+        'pred: "keys-all"
+      },
+      'cp-mint-guard: {
+        'keys: ["dao"],
+        'pred: "keys-all"
+      },
+      'nfp-mint-guard: {
+        'keys: ["dao"],
+        'pred: "keys-all"
+      },
+      'user: {
+        'keys: ["user"],
+        'pred: "keys-all"
+      }
+    }
+  )
+
+  (env-sigs 
+    [
+      {
+        'key: 'dao,
+        'caps: []
+      },
+      {
+        'key: 'user,
+        'caps: [
+            (marmalade.ledger.TRANSFER PLOT_ONE_TOKEN_ID "k:user" "u:test.energetic-plot-staking-center.require-PLOT:dvuodhkFeYMEQUMwceqVFpxxppBNU8kUTnapB-H_FJE" 1.0)
+        ]
+      }
+    ]
+  )
+
+  (expect "Create a staking pool"
+    {
+        'escrow-account: "u:test.energetic-plot-staking-center.require-PLOT:dvuodhkFeYMEQUMwceqVFpxxppBNU8kUTnapB-H_FJE",
+        'original-owner: "k:user",
+        'guard: (read-keyset "user") 
+    }
+    (test.energetic-plot-staking-center.lock-plot PLOT_ONE_TOKEN_ID 1.0 "k:user" (read-keyset "user"))
+  )
+
+  
+
+(commit-tx)

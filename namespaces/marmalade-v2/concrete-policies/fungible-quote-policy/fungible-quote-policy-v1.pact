@@ -137,7 +137,7 @@
       receiver:string
       amount:decimal )
     (enforce-ledger)
-    (enforce false "Transfer prohibited")
+    true ;@todo check if sale exist in table prevent if so
   )
 
   (defun enforce-withdraw:bool
