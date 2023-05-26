@@ -9,9 +9,7 @@
       'dao: {
         'keys: ["dao"],
         'pred: "keys-all"
-      },
-      'ns: "test",
-      'upgrade: false
+      }
     }
   )
 
@@ -86,9 +84,7 @@
           'pred: "keys-all"
         }
       },
-      "collection-id": PLOT_COLLECTION_ID,
-      'ns: "test",
-      'upgrade: false
+      "collection-id": PLOT_COLLECTION_ID
     }
   )
 
