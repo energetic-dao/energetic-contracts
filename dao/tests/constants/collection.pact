@@ -24,6 +24,7 @@
 
   (defconst PLOT_COLLECTION_ID:string "collection:DEulkJ-qDySv_BFKQvJEj315-x5JdnFObku8DXk4iKI")
   (defconst PLOT_ONE_TOKEN_ID:string (create-token-id { 'uri: "plot-1-uri", 'precision: 0, 'policies: PLOT_COLLECTION_POLICIES }))
+  (defconst PLOT_STAKING_CENTER_ESCROW_ACCOUNT:string (format "m:test.energetic-plot-staking-center:{}" [PLOT_ONE_TOKEN_ID]))
 
   (defconst PLOT_MANIFEST:object{manifest}
     (kip.token-manifest.create-manifest (kip.token-manifest.uri "text" "@todo") [

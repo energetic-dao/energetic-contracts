@@ -14,8 +14,7 @@
       'user: {
         'keys: ["user"],
         'pred: "keys-all"
-      },
-      'escrow-account: "m:test.energetic-plot-staking-center:t:vUabw5hppCPwukkv9z-a9zMQp9-cSSC05YQ_C0LqxHU"
+      }
     }
   )
 
@@ -28,7 +27,7 @@
       {
         'key: 'user,
         'caps: [
-          (marmalade.ledger.TRANSFER "t:vUabw5hppCPwukkv9z-a9zMQp9-cSSC05YQ_C0LqxHU" "k:user" "m:test.energetic-plot-staking-center:t:vUabw5hppCPwukkv9z-a9zMQp9-cSSC05YQ_C0LqxHU" 1.0),
+          (marmalade.ledger.TRANSFER PLOT_ONE_TOKEN_ID "k:user" PLOT_STAKING_CENTER_ESCROW_ACCOUNT 1.0),
           (test.energetic-plot-staking-center.UNSTAKE PLOT_ONE_TOKEN_ID "k:user")
         ]
       }
@@ -37,7 +36,7 @@
 
   (expect "Lock plot token in staking center"
     {
-        'escrow-account: (read-msg "escrow-account"),
+        'escrow-account: PLOT_STAKING_CENTER_ESCROW_ACCOUNT,
         'original-owner: "k:user",
         'guard: (read-keyset "user") 
     }
@@ -46,7 +45,7 @@
 
   (expect "Plot to be stored in escrow account after lock"
     1.0
-    (marmalade.ledger.get-balance PLOT_ONE_TOKEN_ID (read-msg "escrow-account"))
+    (marmalade.ledger.get-balance PLOT_ONE_TOKEN_ID PLOT_STAKING_CENTER_ESCROW_ACCOUNT)
   )
 
   (expect "Plot to be removed from owner's account after lock"
@@ -61,7 +60,7 @@
 
   (expect "Plot to be removed from escrow account after unlock"
     0.0
-    (marmalade.ledger.get-balance PLOT_ONE_TOKEN_ID (read-msg "escrow-account"))
+    (marmalade.ledger.get-balance PLOT_ONE_TOKEN_ID PLOT_STAKING_CENTER_ESCROW_ACCOUNT)
   )
 
   (expect "Plot to be restored in owner's account after unlock"
