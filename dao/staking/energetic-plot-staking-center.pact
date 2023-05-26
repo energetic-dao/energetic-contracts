@@ -38,6 +38,15 @@
     true
   )
 
+  (defcap UNSTAKE (plot-id:string account:string)
+    (with-read plot-table plot-id
+      {
+        "guard" := guard 
+      }
+      (enforce-guard guard)
+    )
+  )
+
   (defcap PRIVATE:bool ()
     true
   )
@@ -57,7 +66,7 @@
   )
 
   (defun create-plot-guard:guard (plot-id:string)
-    (create-user-guard (require-PLOT plot-id))
+    (create-module-guard plot-id)
   )
 
   (defun create-escrow-account (plot-id:string)
@@ -69,7 +78,6 @@
   ;;
 
   (defun lock-plot (plot-id:string amount:decimal account:string account-guard:guard)
-    ;(enforce-guard account-guard)
     (enforce (= amount 1.0) "Amount can only be 1")
 
     (let
@@ -94,6 +102,24 @@
         'guard: account-guard
         ;'locked-since:= (at 'block-time (chain-data))
       }
+    )
+  )
+
+  (defun unlock-plot (plot-id:string amount:decimal account:string)
+    (enforce (= amount 1.0) "Amount can only be 1")
+    (with-capability (UNSTAKE plot-id account)
+      ; @todo read from plot-staking-table to unstake upgraded nfts
+
+      (with-read plot-table plot-id
+        {
+          'escrow-account := escrow-account,
+          'guard := guard
+        }
+
+        (install-capability (marmalade.ledger.TRANSFER plot-id escrow-account account amount))
+        (marmalade.ledger.transfer plot-id escrow-account account amount)
+        ; @todo add claim for energetic-coin rewards  
+      )
     )
   )
 
