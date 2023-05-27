@@ -15,23 +15,42 @@
   (defschema plot-staking-schema
     token-id:string
     plot-id:string
-    escrow-account:string
-    original-owner:string
     amount:decimal
     locked-since:time
     account:string
     account-guard:guard
   )
 
+  (defschema plot-slot-constant-schema
+    type:string
+    max:integer
+  )
+
   (deftable plot-table:{plot-schema})
   (deftable plot-staking-table:{plot-staking-schema})
+  (deftable plot-slot-constant-table:{plot-slot-constant-schema})
+
+  ;;
+  ;; Constants
+  ;;
+
+  (defconst SLOT_TYPE_ROOF_SOLAR_PANEL:string "roof-solar-panels")
+  (defconst SLOT_TYPE_STANDING_SOLAR_PANEL:string "standing-solar-panel")
+  (defconst SLOT_TYPE_WALL_BATTERY:string "wall-battery")
+  (defconst SLOT_TYPE_WIND_TURBINE:string "wind-turbine")
+
+  (defconst SLOT_TYPES:[string] [SLOT_TYPE_ROOF_SOLAR_PANEL SLOT_TYPE_WALL_BATTERY SLOT_TYPE_STANDING_SOLAR_PANEL SLOT_TYPE_WIND_TURBINE])
 
   ;;
   ;; Capabilities
   ;;
 
   (defcap GOVERNANCE:bool ()
-    (enforce-keyset "free.energetic-admin")
+    (enforce-keyset (read-keyset "test.energetic-admin"))
+  )
+
+  (defcap OPERATOR:bool ()
+    (enforce-guard (read-keyset "dao"))
   )
 
   (defcap STAKE:bool (account:string escrow-account:string token-id:string amount:decimal)
@@ -58,7 +77,6 @@
 
   ;;
   ;; Escrow Utilities
-  ;; @todo install the capability
   ;;
 
   (defun require-PLOT:bool (plot-id:string)
@@ -124,7 +142,53 @@
   )
 
   (defun upgrade-plot:bool (plot-id:string account:string account-guard:guard token-id:string amount:decimal)
+    (enforce (= amount 1.0) "Amount can only be 1")
+    (let
+      (
+        (escrow-plot-guard (create-plot-guard plot-id))
+        (escrow-account (create-escrow-account plot-id))
+      )
       true
+    )
+  )
+
+  ;;
+  ;; Setters
+  ;;
+
+  (defun set-slot-type-max (type:string max:integer)
+    (with-capability (OPERATOR)
+      (let
+        (
+          (type-hash (hash type))
+          (slot-type-count (length (filter (= type) SLOT_TYPES)))
+        )
+        (enforce (= slot-type-count 1) "Invalid slot type")
+        (write plot-slot-constant-table type-hash
+          {
+            'type: type,
+            'max: max
+          }
+        )
+        {
+          'type: type,
+          'max: max
+        }
+      )
+    )
+  )
+
+  ;;
+  ;; Getters
+  ;;
+
+  (defun get-slot-type-max:integer (type:string)
+    (with-read plot-slot-constant-table (hash type)
+      {
+        'max := max
+      }
+      max
+    )
   )
 )
 
@@ -133,5 +197,6 @@
   [
     (create-table plot-table)
     (create-table plot-staking-table)
+    (create-table plot-slot-constant-table)
   ]
 )

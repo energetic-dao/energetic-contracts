@@ -68,3 +68,43 @@
     (marmalade.ledger.get-balance PLOT_ONE_TOKEN_ID "k:user")
   )
 (commit-tx)
+
+(begin-tx "Setting up plot slot constants")
+  (use test.energetic-plot-staking-center)
+
+  (env-data
+    {
+      'dao: {
+        'keys: ["dao"],
+        'pred: "keys-all"
+      }
+    }
+  )
+
+  (env-sigs
+    [
+      {
+        'key: 'dao,
+        'caps: []
+      }
+    ]
+  )
+
+  (expect "Set plot slot constants"
+    {
+      'type: SLOT_TYPE_ROOF_SOLAR_PANEL,
+      'max: 4
+    }
+    (test.energetic-plot-staking-center.set-slot-type-max SLOT_TYPE_ROOF_SOLAR_PANEL 4)
+  )
+
+  (expect "Validate plot slot constants for type"
+    4
+    (test.energetic-plot-staking-center.get-slot-type-max SLOT_TYPE_ROOF_SOLAR_PANEL)
+  )
+
+  (expect-failure "Cannot add unknow plot slot type"
+    (format "row not found: {}" [(hash "unknown-type")])
+    (test.energetic-plot-staking-center.get-slot-type-max "unknown-type")
+  )
+(commit-tx)
