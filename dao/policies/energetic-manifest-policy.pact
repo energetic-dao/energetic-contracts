@@ -12,6 +12,7 @@
 
   (defschema item-manifest
     manifest:object{manifest}
+    type:string
     guard:guard
   )
 
@@ -63,18 +64,30 @@
     )
   )
 
+  (defun upgrade-type (token-id:string type:string)
+    (with-capability (UPGRADE token-id)
+      (update manifest-table token-id
+        {
+          'type: type
+        }
+      )
+    )
+  )
+
   ;;
   ;; Policy
   ;;
 
   (defun enforce-init:bool (token:object{token-info})
     (enforce-ledger)
-    (let
+    (let*
       (
-        (manifest:object{item-manifest} (read-msg "item-manifest"))
+        (token-id:string (at 'id token))
+        (item-manifest:object{item-manifest} (read-msg "item-manifest"))
+        (manifest:object{manifest} (at 'manifest item-manifest))
       )
-      (enforce-verify-manifest (at 'manifest manifest))
-      (insert manifest-table (at 'id token) manifest)
+      (enforce-verify-manifest manifest)
+      (insert manifest-table token-id item-manifest)
     )
   )
 
@@ -106,22 +119,24 @@
     (enforce-ledger)
     (enforce false "Transfer prohibited")
   )
+
+  ;;
+  ;; Getters
+  ;;
+
+  (defun get-token-manifest (token-id:string)
+    (with-read manifest-table token-id 
+      {
+        'manifest := manifest,
+        'type := type
+      }
+      {
+        'manifest: manifest,
+        'type: type
+      }
+    )
+  )
 )
-
-;;
-;; Getters
-;;
-
-;(defun get-token-manifest:object{manifest} (token-id:string)
-;  (with-read manifest-table token-id 
-;    {
-;      'manifest:= manifest
-;    }
-;    {
-;      'manifest: manifest
-;    }
-;  )
-;)
 
 (if (read-msg 'upgrade)
   ["upgrade complete"]

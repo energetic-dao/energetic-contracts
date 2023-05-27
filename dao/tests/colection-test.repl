@@ -79,6 +79,7 @@
       },
       'item-manifest: {
         'manifest: PLOT_MANIFEST,
+        'type: "plot",
         'guard: {
           'keys: ["dao"],
           'pred: "keys-all"
