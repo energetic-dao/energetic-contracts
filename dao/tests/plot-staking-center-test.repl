@@ -28,6 +28,7 @@
         'key: 'user,
         'caps: [
           (marmalade.ledger.TRANSFER PLOT_ONE_TOKEN_ID "k:user" PLOT_STAKING_CENTER_ESCROW_ACCOUNT 1.0),
+          (test.energetic-plot-staking-center.STAKE PLOT_ONE_TOKEN_ID "k:user" (read-keyset "user")),
           (test.energetic-plot-staking-center.UNSTAKE PLOT_ONE_TOKEN_ID "k:user")
         ]
       }

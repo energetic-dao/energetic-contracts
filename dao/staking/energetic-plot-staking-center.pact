@@ -1,6 +1,8 @@
 (namespace (read-msg 'ns))
 (module energetic-plot-staking-center GOVERNANCE
 
+  (use energetic-manifest-policy)
+
   ;;
   ;; Schema
   ;;
@@ -53,8 +55,14 @@
     (enforce-guard (read-keyset "dao"))
   )
 
-  (defcap STAKE:bool (account:string escrow-account:string token-id:string amount:decimal)
-    true
+  (defcap STAKE:bool (plot-id:string account:string account-guard:guard)
+    (bind (get-token-manifest plot-id)
+      {
+        'type := type
+      }
+      (enforce-guard account-guard)
+      (enforce (= type "plot") "Requires plot type")
+    )
   )
 
   (defcap UNSTAKE (plot-id:string account:string)
@@ -71,7 +79,6 @@
   )
 
   (defcap PLOT:bool (plot-id:string)
-    ; @todo validate if type is plot
     true
   )
 
@@ -97,29 +104,30 @@
 
   (defun lock-plot (plot-id:string amount:decimal account:string account-guard:guard)
     (enforce (= amount 1.0) "Amount can only be 1")
-
     (let
       (
         (escrow-plot-guard (create-plot-guard plot-id))
         (escrow-account (create-escrow-account plot-id))
       )
-      (marmalade.ledger.create-account plot-id escrow-account escrow-plot-guard)
-      (marmalade.ledger.transfer plot-id account escrow-account amount)
-      ; (coin::create-account escrow-account escrow-plot-guard) ; @todo change to energetic-coin
-      (insert plot-table plot-id
+      (with-capability (STAKE plot-id account account-guard)
+        (marmalade.ledger.create-account plot-id escrow-account escrow-plot-guard)
+        (marmalade.ledger.transfer plot-id account escrow-account amount)
+        ; (coin::create-account escrow-account escrow-plot-guard) ; @todo change to energetic-coin
+        (insert plot-table plot-id
+          {
+            'escrow-account: escrow-account,
+            'original-owner: account,
+            'guard: account-guard
+            ;'locked-since: (at 'block-time (chain-data))
+          }
+        )
         {
           'escrow-account: escrow-account,
           'original-owner: account,
           'guard: account-guard
-          ;'locked-since: (at 'block-time (chain-data))
+          ;'locked-since:= (at 'block-time (chain-data))
         }
       )
-      {
-        'escrow-account: escrow-account,
-        'original-owner: account,
-        'guard: account-guard
-        ;'locked-since:= (at 'block-time (chain-data))
-      }
     )
   )
 
