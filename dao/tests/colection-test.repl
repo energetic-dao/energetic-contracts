@@ -94,7 +94,7 @@
       {
         'key: 'dao,
         'caps: [
-          (marmalade.collection-policy-v1.OPERATOR (read-msg "collection-id"))
+          (marmalade.collection-policy-v1.OPERATOR PLOT_COLLECTION_ID)
           (test.energetic-manifest-policy.UPGRADE PLOT_ONE_TOKEN_ID)
         ]
       }
@@ -113,12 +113,12 @@
 
   (expect "Validate energetic-plot collection"
     {
-      "id": (read-msg "collection-id"),
+      "id": PLOT_COLLECTION_ID,
       "max-size": 5,
       "name": "energetic-plots",
       "operator-guard": (read-msg "cp-mint-guard"),
       "size": 1
     }
-    (marmalade.collection-policy-v1.get-collection (read-msg "collection-id"))
+    (marmalade.collection-policy-v1.get-collection PLOT_COLLECTION_ID)
   )
 (commit-tx)
