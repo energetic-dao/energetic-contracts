@@ -88,3 +88,78 @@
     (marmalade.ledger.mint PLOT_ONE_TOKEN_ID "k:dao" (read-keyset "cp-mint-guard") 1.0)
   )
 (rollback-tx)
+
+(begin-tx "Minting roof-solar-panels in energetic-dao collection")
+  (use marmalade.ledger)
+  (use marmalade.policy-manager)
+  (use marmalade.collection-policy-v1)
+  (use free.energetic-constants)
+
+  (env-data
+    {
+      'dao: {
+        'keys: ["dao"],
+        'pred: "keys-all"
+      },
+      'cp-mint-guard: {
+        'keys: ["dao"],
+        'pred: "keys-all"
+      }
+    }
+  )
+
+  (env-sigs 
+    [
+      {
+        'key: 'dao,
+        'caps: [
+          (marmalade.ledger.MINT ROOF_SOLAR_PANEL_TOKEN_ID "k:dao" 100.0)
+          (marmalade.collection-policy-v1.MINT ROOF_SOLAR_PANEL_TOKEN_ID)
+        ]
+      }
+    ]
+  )
+
+  (expect "Minting Roof solar panels"
+    true
+    (marmalade.ledger.mint ROOF_SOLAR_PANEL_TOKEN_ID "k:dao" (read-keyset "cp-mint-guard") 100.0)
+  )
+(commit-tx)
+
+(begin-tx "Minting roof-solar-panels over limit in energetic-dao collection")
+  (use marmalade.ledger)
+  (use marmalade.policy-manager)
+  (use marmalade.collection-policy-v1)
+  (use free.energetic-constants)
+
+  (env-data
+    {
+      'dao: {
+        'keys: ["dao"],
+        'pred: "keys-all"
+      },
+      'cp-mint-guard: {
+        'keys: ["dao"],
+        'pred: "keys-all"
+      }
+    }
+  )
+
+  (env-sigs 
+    [
+      {
+        'key: 'dao,
+        'caps: [
+          (marmalade.ledger.MINT ROOF_SOLAR_PANEL_TOKEN_ID "k:dao" 100.0)
+          (marmalade.collection-policy-v1.MINT ROOF_SOLAR_PANEL_TOKEN_ID)
+        ]
+      }
+    ]
+  )
+
+  ; @todo should fail
+  (expect "Minting Roof solar panels over limit"
+    true
+    (marmalade.ledger.mint ROOF_SOLAR_PANEL_TOKEN_ID "k:dao" (read-keyset "cp-mint-guard") 100.0)
+  )
+(rollback-tx)
