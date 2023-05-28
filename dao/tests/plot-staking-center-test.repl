@@ -127,6 +127,45 @@
   )
 (commit-tx)
 
+(begin-tx "Locking plot")
+  (use marmalade.ledger)
+  (use marmalade.policy-manager)
+  (use marmalade.collection-policy-v1)
+  (use free.energetic-constants)
+  (use free.energetic-plot-staking-center)
+
+  (env-data
+    {
+      'dao: {
+        'keys: ["dao"],
+        'pred: "keys-all"
+      },
+      'user: {
+        'keys: ["user"],
+        'pred: "keys-all"
+      }
+    }
+  )
+
+  (env-sigs
+    [
+      {
+        'key: 'dao,
+        'caps: []
+      },
+      {
+        'key: 'user,
+        'caps: [
+          (marmalade.ledger.TRANSFER PLOT_ONE_TOKEN_ID "k:user" PLOT_STAKING_CENTER_ESCROW_ACCOUNT 1.0),
+          (free.energetic-plot-staking-center.STAKE PLOT_ONE_TOKEN_ID "k:user" (read-keyset "user"))
+        ]
+      }
+    ]
+  )
+
+  (free.energetic-plot-staking-center.lock-plot PLOT_ONE_TOKEN_ID 1.0 "k:user" (read-keyset "user"))
+(commit-tx)
+
 (begin-tx "Upgrading plot")
   (use free.energetic-constants)
   (use free.energetic-plot-staking-center)
@@ -154,7 +193,7 @@
         'key: 'user,
         'caps: [
           (marmalade.ledger.TRANSFER ROOF_SOLAR_PANEL_TOKEN_ID PLOT_STAKING_CENTER_ESCROW_ACCOUNT "k:user" 2.0),
-          (free.energetic-plot-staking-center.UPGRADE_PLOT PLOT_ONE_TOKEN_ID ROOF_SOLAR_PANEL_TOKEN_ID (read-keyset "user"))
+          (free.energetic-plot-staking-center.UPGRADE_PLOT PLOT_ONE_TOKEN_ID ROOF_SOLAR_PANEL_TOKEN_ID "k:user" (read-keyset "user"))
         ]
       }
     ]
@@ -207,7 +246,7 @@
         'key: 'user,
         'caps: [
           (marmalade.ledger.TRANSFER ROOF_SOLAR_PANEL_TOKEN_ID PLOT_STAKING_CENTER_ESCROW_ACCOUNT "k:user" 4.0),
-          (free.energetic-plot-staking-center.UPGRADE_PLOT PLOT_ONE_TOKEN_ID ROOF_SOLAR_PANEL_TOKEN_ID (read-keyset "user"))
+          (free.energetic-plot-staking-center.UPGRADE_PLOT PLOT_ONE_TOKEN_ID ROOF_SOLAR_PANEL_TOKEN_ID "k:user" (read-keyset "user"))
         ]
       }
     ]
@@ -246,7 +285,8 @@
         'key: 'user,
         'caps: [
           (marmalade.ledger.TRANSFER ROOF_SOLAR_PANEL_TOKEN_ID PLOT_STAKING_CENTER_ESCROW_ACCOUNT "k:user" 2.0),
-          (free.energetic-plot-staking-center.UPGRADE_PLOT PLOT_ONE_TOKEN_ID ROOF_SOLAR_PANEL_TOKEN_ID (read-keyset "user"))
+          (free.energetic-plot-staking-center.UPGRADE_PLOT PLOT_ONE_TOKEN_ID ROOF_SOLAR_PANEL_TOKEN_ID "k:user" (read-keyset "user"))
+          (free.energetic-plot-staking-center.UNSTAKE PLOT_ONE_TOKEN_ID "k:user")
         ]
       }
     ]
@@ -270,4 +310,56 @@
     ]
     (free.energetic-plot-staking-center.get-staked-items-on-plot PLOT_ONE_TOKEN_ID)
   )
+(commit-tx)
+
+(begin-tx "Unstaking plot")
+  (use marmalade.ledger)
+  (use marmalade.policy-manager)
+  (use marmalade.collection-policy-v1)
+  (use free.energetic-constants)
+  (use free.energetic-plot-staking-center)
+
+  (env-data
+    {
+      'dao: {
+        'keys: ["dao"],
+        'pred: "keys-all"
+      },
+      'user: {
+        'keys: ["user"],
+        'pred: "keys-all"
+      }
+    }
+  )
+
+  (env-sigs
+    [
+      {
+        'key: 'dao,
+        'caps: []
+      },
+      {
+        'key: 'user,
+        'caps: [
+          (free.energetic-plot-staking-center.UNSTAKE PLOT_ONE_TOKEN_ID "k:user")
+        ]
+      }
+    ]
+  )
+
+  (expect "Unstaking plot"
+    true
+    (free.energetic-plot-staking-center.unlock-plot PLOT_ONE_TOKEN_ID 1.0 "k:user")
+  )
+
+  (expect "Plot to be unstaked"
+    1.0
+    (marmalade.ledger.get-balance PLOT_ONE_TOKEN_ID "k:user")
+  )
+
+  (expect "Plot upgraded items to be unstaked"
+    6.0
+    (marmalade.ledger.get-balance ROOF_SOLAR_PANEL_TOKEN_ID "k:user")
+  )
+
 (commit-tx)
