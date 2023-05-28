@@ -70,7 +70,7 @@
     )
   )
 
-  (defcap UNSTAKE (plot-id:string account:string)
+  (defcap UNSTAKE:bool (plot-id:string account:string)
     (with-read plot-table plot-id
       {
         "account-guard" := guard
@@ -79,12 +79,14 @@
     )
   )
 
-  (defcap UPGRADE_PLOT (plot-id:string item-id:string account-guard:guard)
+  (defcap UPGRADE_PLOT:bool (plot-id:string item-id:string account:string account-guard:guard)
     (with-read plot-table plot-id
       {
-        "account-guard" := guard
+        "account-guard" := guard,
+        "original-owner" := original-owner
       }
       (enforce (= guard account-guard) "Invalid account")
+      (enforce (= original-owner account) "Plot is not staked by owner")
       (enforce-guard guard)
     )
   )
@@ -134,10 +136,9 @@
         (escrow-account (create-escrow-account plot-id))
       )
       (with-capability (STAKE plot-id account account-guard)
-        ;(marmalade.ledger.create-account plot-id escrow-account escrow-plot-guard)
         (marmalade.ledger.transfer-create plot-id account escrow-account escrow-plot-guard amount)
         ; (coin::create-account escrow-account escrow-plot-guard) ; @todo change to energetic-coin
-        (insert plot-table plot-id
+        (write plot-table plot-id
           {
             'escrow-account: escrow-account,
             'escrow-guard: escrow-plot-guard,
@@ -156,25 +157,41 @@
     )
   )
 
-  (defun unlock-plot (plot-id:string amount:decimal account:string)
+  (defun unlock-plot:bool (plot-id:string amount:decimal account:string)
     (enforce (= amount 1.0) "Amount can only be 1")
     (with-capability (UNSTAKE plot-id account)
-      ; @todo read from plot-staking-table to unstake upgraded nfts
-
       (bind (get-plot plot-id)
         {
           'escrow-account := escrow-account
         }
+        (let
+          (
+            (staked-plot-items:[object{plot-staking-schema}] (get-staked-items-on-plot plot-id))
+            (transfer-staked-item
+              (lambda (staked-item:object)
+                (install-capability (marmalade.ledger.TRANSFER (at 'item-id staked-item) escrow-account account (at 'amount staked-item)))
+                (marmalade.ledger.transfer (at 'item-id staked-item) escrow-account account (at 'amount staked-item))
+              )
+            )
+          )
+          (map transfer-staked-item staked-plot-items)
+          (install-capability (marmalade.ledger.TRANSFER plot-id escrow-account account amount))
+          (marmalade.ledger.transfer plot-id escrow-account account amount)
+          ; @todo add claim for energetic-coin rewards
 
-        (install-capability (marmalade.ledger.TRANSFER plot-id escrow-account account amount))
-        (marmalade.ledger.transfer plot-id escrow-account account amount)
-        ; @todo add claim for energetic-coin rewards  
+          (update plot-table plot-id
+            {
+              'original-owner: ""
+            }
+          )
+          true
+        )
       )
     )
   )
 
   (defun upgrade-plot:bool (plot-id:string item-id:string amount:decimal account:string account-guard:guard)
-    (with-capability (UPGRADE_PLOT plot-id item-id account-guard)
+    (with-capability (UPGRADE_PLOT plot-id item-id account account-guard)
       (bind (get-token-manifest item-id)
         {
           'type := type
