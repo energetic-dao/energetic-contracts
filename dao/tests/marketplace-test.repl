@@ -69,8 +69,8 @@
     (marmalade.ledger.get-balance PLOT_ONE_TOKEN_ID "k:user")
   )
 
-  (expect "k:user balance of coin to be 0.0"
-    0.0
+  (expect "k:user balance of coin to be 900.0"
+    900.0
     (coin.get-balance "k:user")
   )
 
@@ -81,6 +81,95 @@
 
   (expect "k:dao balance of coin to be 100.0"
     100.0
+    (coin.get-balance "k:dao")
+  )
+(commit-tx)
+
+(begin-tx "Marketplace actions for solar panels energetic-roof-solar-panel collection")
+  (use marmalade.ledger)
+  (use marmalade.policy-manager)
+  (use marmalade.collection-policy-v1)
+  (use marmalade.fungible-quote-policy-v1)
+  (use free.energetic-constants)
+
+  (env-data
+    {
+      'dao: {
+        'keys: ["dao"],
+        'pred: "keys-all"
+      },
+      'user: {
+        'keys: ["user"],
+        'pred: "keys-all"
+      },
+      "quote": {
+        'fungible: coin,
+        'price: 10.0,
+        'recipient: "k:dao",
+        'recipient-guard: {
+          'keys: ["dao"], 
+          'pred: "keys-all"
+        }
+      },
+      'marketplace-fee: {
+        'marketplace-account: "",
+        'mk-fee-percentage: 0.0
+      },
+      'buyer: "k:user",
+      'buyer-guard: { 
+        'keys: ["user"],
+        'pred: "keys-all"
+      }
+    }
+  )
+
+  (env-sigs 
+    [
+      {
+        'key: 'dao,
+        'caps: [
+          (marmalade.ledger.OFFER ROOF_SOLAR_PANEL_TOKEN_ID "k:dao" 6.0 (time "2024-05-24T00:00:00Z"))
+        ]
+      },
+      {
+        'key: 'user,
+        'caps: [
+          (BUY ROOF_SOLAR_PANEL_TOKEN_ID "k:dao" "k:user"  6.0 (time "2024-05-24T00:00:00Z") "VW6DyMZfS2Y5FC-818218B1mqC-iPYEO8k5eDKARTIc")
+          (coin.TRANSFER "k:user" "c:qghCCQC61BYM3VuS-wVxRCJoZGh6Ky8boBcSGoivDi4" 60.0)
+        ]
+      }
+    ]
+  )
+
+  (env-hash (hash "sale-roof-solar-panel"))
+
+  (expect "Setting Quote as DAO for roof-solar-panel pack (6)"
+    true
+    (marmalade.ledger.sale ROOF_SOLAR_PANEL_TOKEN_ID "k:dao" 6.0 (time "2024-05-24T00:00:00Z"))
+  )
+
+  (expect "Buying Quote from DAO as User for roof-solar-panel pack (6)"
+    true
+    (continue-pact 1)
+  )
+  
+  (expect "k:user balance of roof-solar-panel to be 6.0"
+    6.0
+    (marmalade.ledger.get-balance ROOF_SOLAR_PANEL_TOKEN_ID "k:user")
+  )
+
+  (expect "k:user balance of coin to be 840.0"
+    840.0
+    (coin.get-balance "k:user")
+  )
+
+  (expect "k:dao balance of roof-solar-panel to be 94.0"
+    94.0
+    (marmalade.ledger.get-balance ROOF_SOLAR_PANEL_TOKEN_ID "k:dao")
+  )
+
+  (expect "k:dao balance of coin to be 160.0"
+    160.0
     (coin.get-balance "k:dao")
   )
 (commit-tx)
