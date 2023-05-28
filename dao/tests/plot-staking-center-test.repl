@@ -2,8 +2,8 @@
   (use marmalade.ledger)
   (use marmalade.policy-manager)
   (use marmalade.collection-policy-v1)
-  (use test.energetic-constants)
-  (use test.energetic-plot-staking-center)
+  (use free.energetic-constants)
+  (use free.energetic-plot-staking-center)
 
   (env-data
     {
@@ -28,8 +28,8 @@
         'key: 'user,
         'caps: [
           (marmalade.ledger.TRANSFER PLOT_ONE_TOKEN_ID "k:user" PLOT_STAKING_CENTER_ESCROW_ACCOUNT 1.0),
-          (test.energetic-plot-staking-center.STAKE PLOT_ONE_TOKEN_ID "k:user" (read-keyset "user")),
-          (test.energetic-plot-staking-center.UNSTAKE PLOT_ONE_TOKEN_ID "k:user")
+          (free.energetic-plot-staking-center.STAKE PLOT_ONE_TOKEN_ID "k:user" (read-keyset "user")),
+          (free.energetic-plot-staking-center.UNSTAKE PLOT_ONE_TOKEN_ID "k:user")
         ]
       }
     ]
@@ -41,7 +41,7 @@
         'original-owner: "k:user",
         'guard: (read-keyset "user") 
     }
-    (test.energetic-plot-staking-center.lock-plot PLOT_ONE_TOKEN_ID 1.0 "k:user" (read-keyset "user"))
+    (free.energetic-plot-staking-center.lock-plot PLOT_ONE_TOKEN_ID 1.0 "k:user" (read-keyset "user"))
   )
 
   (expect "Plot to be stored in escrow account after lock"
@@ -56,7 +56,7 @@
 
   (expect "Unlock plot token in staking center"
     true
-    (test.energetic-plot-staking-center.unlock-plot PLOT_ONE_TOKEN_ID 1.0 "k:user")
+    (free.energetic-plot-staking-center.unlock-plot PLOT_ONE_TOKEN_ID 1.0 "k:user")
   )
 
   (expect "Plot to be removed from escrow account after unlock"
@@ -71,7 +71,8 @@
 (commit-tx)
 
 (begin-tx "Setting up plot slot constants")
-  (use test.energetic-plot-staking-center)
+  (use free.energetic-constants)
+  (use free.energetic-plot-staking-center)
 
   (env-data
     {
@@ -94,18 +95,18 @@
   (expect "Set plot slot constants"
     {
       'type: SLOT_TYPE_ROOF_SOLAR_PANEL,
-      'max: 4
+      'max: 4.0
     }
-    (test.energetic-plot-staking-center.set-slot-type-max SLOT_TYPE_ROOF_SOLAR_PANEL 4)
+    (free.energetic-plot-staking-center.set-slot-type-max SLOT_TYPE_ROOF_SOLAR_PANEL 4.0)
   )
 
   (expect "Validate plot slot constants for type"
-    4
-    (test.energetic-plot-staking-center.get-slot-type-max SLOT_TYPE_ROOF_SOLAR_PANEL)
+    4.0
+    (free.energetic-plot-staking-center.get-slot-type-max SLOT_TYPE_ROOF_SOLAR_PANEL)
   )
 
   (expect-failure "Cannot add unknow plot slot type"
     (format "row not found: {}" [(hash "unknown-type")])
-    (test.energetic-plot-staking-center.get-slot-type-max "unknown-type")
+    (free.energetic-plot-staking-center.get-slot-type-max "unknown-type")
   )
 (commit-tx)

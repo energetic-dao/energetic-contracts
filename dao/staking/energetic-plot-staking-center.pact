@@ -1,7 +1,7 @@
 (namespace (read-msg 'ns))
 (module energetic-plot-staking-center GOVERNANCE
 
-  (use energetic-manifest-policy)
+  (use free.energetic-manifest-policy)
 
   ;;
   ;; Schema

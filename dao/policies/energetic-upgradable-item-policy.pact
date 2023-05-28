@@ -16,16 +16,6 @@
   ;;
   ;; Events
   ;;
-  
-  (defcap ITEM_MINTED:bool (token-id:string current-supply:decimal minter:string)
-    @event
-    true
-  )
-  
-  (defcap ITEM_CREATED:bool (token-id:string manifest:object{manifest})
-    @event
-    true
-  )
 
   ;;
   ;; Functions
@@ -44,12 +34,7 @@
   )
 
   (defun enforce-burn:bool (token:object{token-info} account:string amount:decimal)
-    @doc "Burning policy for TOKEN to ACCOUNT for AMOUNT."
-    @model [
-        (property (!= account ""))
-        (property (> amount 0.0))
-    ]
-    false
+    (enforce-ledger)
   )
 
   (defun enforce-init:bool (token:object{token-info})
@@ -58,22 +43,18 @@
 
   (defun enforce-offer:bool (token:object{token-info} seller:string amount:decimal sale-id:string)
     (enforce-ledger)
-    false
   )
 
   (defun enforce-buy:bool (token:object{token-info} seller:string buyer:string buyer-guard:guard amount:decimal sale-id:string)
     (enforce-ledger)
-    false
   )
 
   (defun enforce-transfer:bool (token:object{token-info} sender:string guard:guard receiver:string amount:decimal)
     (enforce-ledger)
-    true
   )
 
   (defun enforce-crosschain:bool (token:object{token-info} sender:string guard:guard receiver:string target-chain:string amount:decimal)
     (enforce-ledger)
-    false
   )
 
   (defun enforce-withdraw:bool (token:object{token-info} seller:string amount:decimal sale-id:string)

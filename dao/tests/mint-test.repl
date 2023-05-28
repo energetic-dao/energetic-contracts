@@ -2,7 +2,7 @@
   (use marmalade.ledger)
   (use marmalade.policy-manager)
   (use marmalade.collection-policy-v1)
-  (use test.energetic-constants)
+  (use free.energetic-constants)
 
   (env-data
     {
@@ -45,7 +45,7 @@
   (use marmalade.ledger)
   (use marmalade.policy-manager)
   (use marmalade.collection-policy-v1)
-  (use test.energetic-constants)
+  (use free.energetic-constants)
 
   (env-data
     {
