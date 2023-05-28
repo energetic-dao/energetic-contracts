@@ -32,8 +32,8 @@
   (coin.create-account "k:dao" (read-keyset "dao"))
   (coin.create-account "k:user" (read-keyset "user"))
 
-  (coin.coinbase "k:user" (read-keyset "user") 100.0)
+  (coin.coinbase "k:user" (read-keyset "user") 1000.0)
 
-  (expect "k:user balance is 100.0" (coin.get-balance "k:user") 100.0)
+  (expect "k:user balance is 100.0" (coin.get-balance "k:user") 1000.0)
   (expect "k:dao balance is 0.0" (coin.get-balance "k:dao") 0.0)
 (commit-tx)

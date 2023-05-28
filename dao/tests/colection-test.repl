@@ -122,3 +122,97 @@
     (marmalade.collection-policy-v1.get-collection PLOT_COLLECTION_ID)
   )
 (commit-tx)
+
+(begin-tx "Setup Roof Solar Panel collections")
+  (use marmalade.ledger)
+  (use marmalade.policy-manager)
+  (use marmalade.collection-policy-v1)
+  (use free.energetic-constants)
+
+  (env-data
+    {
+      'dao: {
+        'keys: ["dao"],
+        'pred: "keys-all"
+      }
+    }
+  )
+
+  (expect "Initializing energetic-plot-upgrades collection"
+    true
+    (create-collection "energetic-plot-upgrades" 4 (read-keyset "dao"))
+  )
+
+  (expect "Generation of energetic-plot-upgrades collection"
+    PLOT_UPGRADES_COLLECTION_ID
+    (create-collection-id "energetic-plot-upgrades")
+  )
+(commit-tx)
+
+(begin-tx "Create Roof Solar Panel for collection")
+  (use marmalade.ledger)
+  (use marmalade.policy-manager)
+  (use marmalade.collection-policy-v1)
+  (use free.energetic-manifest-policy)
+  (use free.energetic-constants)
+  (use free.energetic-plot-staking-center)
+
+  (env-data
+    {
+      'dao: {
+        'keys: ["dao"],
+        'pred: "keys-all"
+      },
+      'dao-manifest-upgrader: {
+        'keys: ["dao"],
+        'pred: "keys-all"
+      },
+      'cp-mint-guard: {
+        'keys: ["dao"],
+        'pred: "keys-all"
+      },
+      'item-manifest: {
+        'manifest: ROOF_SOLAR_PANEL_MANIFEST,
+        'type: SLOT_TYPE_ROOF_SOLAR_PANEL,
+        'guard: {
+          'keys: ["dao"],
+          'pred: "keys-all"
+        }
+      },
+      "collection-id": PLOT_UPGRADES_COLLECTION_ID
+    }
+  )
+
+  (env-sigs
+    [
+      {
+        'key: 'dao,
+        'caps: [
+          (marmalade.collection-policy-v1.OPERATOR PLOT_UPGRADES_COLLECTION_ID)
+          (free.energetic-manifest-policy.UPGRADE ROOF_SOLAR_PANEL_TOKEN_ID)
+        ]
+      }
+    ]
+  )
+
+  (expect "Create plot-upgrades token"
+    true
+    (create-token ROOF_SOLAR_PANEL_TOKEN_ID 0 "roof-solar-panel-upgrade-uri" PLOT_UPGRADES_COLLECTION_POLICIES)
+  )
+
+  (expect "Update the manifest of the Plot token"
+    "Write succeeded"
+    (upgrade-manifest ROOF_SOLAR_PANEL_TOKEN_ID (at 'manifest (read-msg 'item-manifest )))
+  )
+
+  (expect "Validate energetic-plot-upgrades collection"
+    {
+      "id": PLOT_UPGRADES_COLLECTION_ID,
+      "max-size": 4,
+      "name": "energetic-plot-upgrades",
+      "operator-guard": (read-msg "cp-mint-guard"),
+      "size": 1
+    }
+    (marmalade.collection-policy-v1.get-collection PLOT_UPGRADES_COLLECTION_ID)
+  )
+(commit-tx)

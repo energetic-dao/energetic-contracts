@@ -32,6 +32,14 @@
         {
           'attributes: [
             {
+              'trait_type: "name",
+              'value: "Plot #1"
+            },
+            {
+              'trait_type: "description",
+              'value: "A plot of land in the energetic ecosystem."
+            },
+            {
               'trait_type: "Plot",
               'value: "normal"
             },
@@ -44,20 +52,60 @@
               'value: "floating"
             },
             {
-              'trait_type: "Panels",
-              'value: 0
-            },
-            {
-              'trait_type: "Wind-Turbines",
-              'value: 0
-            }
-            {
-              'trait_type: "Batteries",
-              'value: 0
+              'trait_type: "Color",
+              'value: "lightblue"
             }
           ]
         }
       )
     ])
-    )
+  )
+
+  ;; Roof Solar Panels
+  (defconst PLOT_UPGRADES_COLLECTION:object{concrete-policy}
+    { 
+      'quote-policy: true,
+      'non-fungible-policy: false,
+      'royalty-policy: false, ; @todo
+      'collection-policy: true
+    }
+  )
+
+  (defconst PLOT_UPGRADES_COLLECTION_POLICIES:object{token-policies}
+    { 
+      'concrete-policies: PLOT_UPGRADES_COLLECTION,
+      'immutable-policies: [free.energetic-upgradable-item-policy free.energetic-manifest-policy],
+      'adjustable-policies: []
+    }
+  )
+
+  (defconst PLOT_UPGRADES_COLLECTION_ID:string "collection:db4yAq2OOvKGcC2FAWO6rRcFkyKNw4Ue2F64EW3S13g")
+  (defconst ROOF_SOLAR_PANEL_TOKEN_ID:string (create-token-id { 'uri: "roof-solar-panel-upgrade-uri", 'precision: 0, 'policies: PLOT_UPGRADES_COLLECTION_POLICIES }))
+
+  (defconst ROOF_SOLAR_PANEL_MANIFEST:object{manifest}
+    (kip.token-manifest.create-manifest (kip.token-manifest.uri "text" "@todo") [
+      (kip.token-manifest.create-datum (kip.token-manifest.uri "text" "json")
+        {
+          'attributes: [
+            {
+              'trait_type: "name",
+              'value: "Roof Solar Panel"
+            },
+            {
+              'trait_type: "description",
+              'value: "A solar panel that can be placed on a roof."
+            },
+            {
+              'trait_type: "type",
+              'value: "solar-panel"
+            },
+            {
+              'trait_type: "power",
+              'value: 2.0
+            }
+          ]
+        }
+      )
+    ])
+  )
 )
