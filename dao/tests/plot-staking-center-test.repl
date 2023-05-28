@@ -39,7 +39,8 @@
     {
         'escrow-account: PLOT_STAKING_CENTER_ESCROW_ACCOUNT,
         'original-owner: "k:user",
-        'guard: (read-keyset "user") 
+        'account-guard: (read-keyset "user"),
+        'locked-since: (time "1970-01-01T00:00:00Z")
     }
     (free.energetic-plot-staking-center.lock-plot PLOT_ONE_TOKEN_ID 1.0 "k:user" (read-keyset "user"))
   )
@@ -76,6 +77,10 @@
 
   (env-data
     {
+      'energetic-operator: {
+        'keys: ["energetic-operator"],
+        'pred: "keys-all"
+      },
       'dao: {
         'keys: ["dao"],
         'pred: "keys-all"
@@ -85,6 +90,12 @@
 
   (env-sigs
     [
+      {
+        'key: 'energetic-operator,
+        'caps: [
+          (OPERATOR)
+        ]
+      },
       {
         'key: 'dao,
         'caps: []
@@ -108,5 +119,155 @@
   (expect-failure "Cannot add unknow plot slot type"
     (format "row not found: {}" [(hash "unknown-type")])
     (free.energetic-plot-staking-center.get-slot-type-max "unknown-type")
+  )
+
+  (expect "Plot doesn't have upgradable item policy"
+    false
+    (free.energetic-plot-staking-center.item-has-policy-active PLOT_ONE_TOKEN_ID 'immutable-policies free.energetic-upgradable-item-policy)
+  )
+(commit-tx)
+
+(begin-tx "Upgrading plot")
+  (use free.energetic-constants)
+  (use free.energetic-plot-staking-center)
+
+  (env-data
+    {
+      'dao: {
+        'keys: ["dao"],
+        'pred: "keys-all"
+      },
+      'user: {
+        'keys: ["user"],
+        'pred: "keys-all"
+      }
+    }
+  )
+
+  (env-sigs
+    [
+      {
+        'key: 'dao,
+        'caps: []
+      },
+      {
+        'key: 'user,
+        'caps: [
+          (marmalade.ledger.TRANSFER ROOF_SOLAR_PANEL_TOKEN_ID PLOT_STAKING_CENTER_ESCROW_ACCOUNT "k:user" 2.0),
+          (free.energetic-plot-staking-center.UPGRADE_PLOT PLOT_ONE_TOKEN_ID ROOF_SOLAR_PANEL_TOKEN_ID (read-keyset "user"))
+        ]
+      }
+    ]
+  )
+
+  (expect "Upgrade plot with roof solar panels (2)"
+    true
+    (free.energetic-plot-staking-center.upgrade-plot PLOT_ONE_TOKEN_ID ROOF_SOLAR_PANEL_TOKEN_ID 2.0 "k:user" (read-keyset "user"))
+  )
+
+  (expect "Plot with upgraded roof-solar-panels"
+    [
+      {
+        'plot-id: PLOT_ONE_TOKEN_ID,
+        'item-id: ROOF_SOLAR_PANEL_TOKEN_ID,
+        'amount: 2.0,
+        'account: "k:user",
+        'type: SLOT_TYPE_ROOF_SOLAR_PANEL,
+        'locked-since: (time "1970-01-01T00:00:00Z")
+      }
+    ]
+    (free.energetic-plot-staking-center.get-staked-items-on-plot PLOT_ONE_TOKEN_ID)
+  )
+(commit-tx)
+
+(begin-tx)
+  (use free.energetic-constants)
+  (use free.energetic-plot-staking-center)
+
+  (env-data
+    {
+      'dao: {
+        'keys: ["dao"],
+        'pred: "keys-all"
+      },
+      'user: {
+        'keys: ["user"],
+        'pred: "keys-all"
+      }
+    }
+  )
+
+  (env-sigs
+    [
+      {
+        'key: 'dao,
+        'caps: []
+      },
+      {
+        'key: 'user,
+        'caps: [
+          (marmalade.ledger.TRANSFER ROOF_SOLAR_PANEL_TOKEN_ID PLOT_STAKING_CENTER_ESCROW_ACCOUNT "k:user" 4.0),
+          (free.energetic-plot-staking-center.UPGRADE_PLOT PLOT_ONE_TOKEN_ID ROOF_SOLAR_PANEL_TOKEN_ID (read-keyset "user"))
+        ]
+      }
+    ]
+  )
+
+  (expect-failure "Upgrade plot with roof solar panels cannot exceed max"
+    (format "Amount can max be {}" [(free.energetic-plot-staking-center.get-slot-type-max SLOT_TYPE_ROOF_SOLAR_PANEL)])
+    (free.energetic-plot-staking-center.upgrade-plot PLOT_ONE_TOKEN_ID ROOF_SOLAR_PANEL_TOKEN_ID 4.0 "k:user" (read-keyset "user"))
+  )
+(rollback-tx)
+
+(begin-tx "Upgrading plot 2")
+  (use free.energetic-constants)
+  (use free.energetic-plot-staking-center)
+
+  (env-data
+    {
+      'dao: {
+        'keys: ["dao"],
+        'pred: "keys-all"
+      },
+      'user: {
+        'keys: ["user"],
+        'pred: "keys-all"
+      }
+    }
+  )
+
+  (env-sigs
+    [
+      {
+        'key: 'dao,
+        'caps: []
+      },
+      {
+        'key: 'user,
+        'caps: [
+          (marmalade.ledger.TRANSFER ROOF_SOLAR_PANEL_TOKEN_ID PLOT_STAKING_CENTER_ESCROW_ACCOUNT "k:user" 2.0),
+          (free.energetic-plot-staking-center.UPGRADE_PLOT PLOT_ONE_TOKEN_ID ROOF_SOLAR_PANEL_TOKEN_ID (read-keyset "user"))
+        ]
+      }
+    ]
+  )
+
+  (expect "Upgrade plot with roof solar panels (4)"
+    true
+    (free.energetic-plot-staking-center.upgrade-plot PLOT_ONE_TOKEN_ID ROOF_SOLAR_PANEL_TOKEN_ID 2.0 "k:user" (read-keyset "user"))
+  )
+
+  (expect "Plot with upgraded with extra roof-solar-panels"
+    [
+      {
+        'plot-id: PLOT_ONE_TOKEN_ID,
+        'item-id: ROOF_SOLAR_PANEL_TOKEN_ID,
+        'amount: 4.0,
+        'account: "k:user",
+        'type: SLOT_TYPE_ROOF_SOLAR_PANEL,
+        'locked-since: (time "1970-01-01T00:00:00Z")
+      }
+    ]
+    (free.energetic-plot-staking-center.get-staked-items-on-plot PLOT_ONE_TOKEN_ID)
   )
 (commit-tx)
