@@ -23,5 +23,7 @@
   (load "../policies/energetic-upgradable-item-policy.pact")
   (load "../policies/energetic-manifest-policy.pact")
 
-  (load "./constants/collection.repl")
+  (load "./constants/collection.pact")
+
+  (load "../tokens/energetic-token.pact")
 (commit-tx)
