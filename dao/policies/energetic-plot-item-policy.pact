@@ -1,38 +1,46 @@
-(namespace (read-msg 'ns))
-(module energetic-manifest-policy GOVERNANCE
+(module energetic-plot-item-policy GOVERNANCE
 
   (implements kip.token-policy-v2)
-
-  (use kip.token-manifest)
   (use kip.token-policy-v2 [token-info])
+
+  ;;
+  ;; Constants
+  ;;
+
+  (defconst METADATA_UPGRADE_GUARD:string "item-metadata-guard")
 
   ;;
   ;; Schema
   ;;
 
-  (defschema item-manifest
-    manifest:object{manifest}
+  (defschema metadata
+    power-rate:decimal
+    type:string
+  )
+
+  (defschema item-metadata-schema
+    power-rate:decimal
     type:string
     guard:guard
   )
 
-  (deftable manifest-table:{item-manifest})
+  (deftable item-metadata-table:{item-metadata-schema})
 
   ;;
   ;; Capabilities
   ;;
 
   (defcap GOVERNANCE ()
-    (enforce-guard (keyset-ref-guard "free.energetic-admin"))
+    (enforce-keyset "free.energetic-admin")
   )
 
   (defcap UPGRADE (token-id:string)
     @managed
-    (with-read manifest-table token-id 
+    (with-read item-metadata-table token-id 
       {
-        'guard := manifest-guard
+        'guard := item-guard
       }
-      (enforce-guard manifest-guard)
+      (enforce-guard item-guard)
     )
   )
 
@@ -41,34 +49,15 @@
   ;;
 
   (defun enforce-ledger:bool ()
-     (enforce-guard (marmalade.ledger.ledger-guard))
+    (enforce-guard (marmalade.ledger.ledger-guard))
+    true
   )
 
-  (defun get-manifest:object{manifest} (token-id:string)
-    (with-read manifest-table token-id 
-      {
-        'manifest := manifest
-      }
-      manifest
-    )
-  )
-
-  (defun upgrade-manifest (token-id:string manifest:object{manifest})
+  (defun upgrade-power-rate (token-id:string power-rate:decimal)
     (with-capability (UPGRADE token-id)
-      (enforce-verify-manifest manifest)
-      (update manifest-table token-id
+      (update item-metadata-table token-id
         {
-          'manifest: manifest
-        }
-      )
-    )
-  )
-
-  (defun upgrade-type (token-id:string type:string)
-    (with-capability (UPGRADE token-id)
-      (update manifest-table token-id
-        {
-          'type: type
+          'power-rate: power-rate
         }
       )
     )
@@ -80,14 +69,19 @@
 
   (defun enforce-init:bool (token:object{token-info})
     (enforce-ledger)
-    (let*
+    (let
       (
         (token-id:string (at 'id token))
-        (item-manifest:object{item-manifest} (read-msg "item-manifest"))
-        (manifest:object{manifest} (at 'manifest item-manifest))
+        (item-metadata:object{metadata} (read-msg "item-metadata"))
+        (upgrade-guard:guard (read-keyset METADATA_UPGRADE_GUARD))
       )
-      (enforce-verify-manifest manifest)
-      (insert manifest-table token-id item-manifest)
+      (insert item-metadata-table token-id
+        {
+          'power-rate: (at 'power-rate item-metadata),
+          'type: (at 'type item-metadata),
+          'guard: upgrade-guard
+        }
+      )
     )
   )
 
@@ -124,23 +118,20 @@
   ;; Getters
   ;;
 
-  (defun get-token-manifest (token-id:string)
-    (with-read manifest-table token-id 
+  (defun get-token-metadata:object{item-metadata-schema} (token-id:string)
+    (with-read item-metadata-table token-id 
       {
-        'manifest := manifest,
-        'type := type
+        'guard := guard,
+        'type := type,
+        'power-rate := power-rate
       }
       {
-        'manifest: manifest,
-        'type: type
+        'guard: guard,
+        'type: type,
+        'data: power-rate
       }
     )
   )
 )
 
-(if (read-msg 'upgrade)
-  ["upgrade complete"]
-  [
-    (create-table manifest-table)
-  ]
-)
+(create-table item-metadata-table)

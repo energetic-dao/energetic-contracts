@@ -1,7 +1,10 @@
-(namespace (read-msg 'ns))
+(namespace "free")
+;(define-keyset "free.energetic-admin" (read-keyset "energetic-admin"))
+(define-keyset "free.energetic-operator" (read-keyset "energetic-operator"))
 (module energetic-plot-staking-center GOVERNANCE
 
-  (use free.energetic-manifest-policy)
+  (use free.energetic-plot-item-policy)
+  (use free.energetic-plot-policy)
 
   ;;
   ;; Schema
@@ -38,8 +41,8 @@
   ;; Constants
   ;;
 
-  (defconst ADMIN_KEYSET (read-keyset "energetic-admin"))
-  (defconst OPERATOR_KEYSET (read-keyset "energetic-operator"))
+  (defconst ADMIN_KEYSET "free.energetic-admin")
+  (defconst OPERATOR_KEYSET "free.energetic-operator")
 
   (defconst SLOT_TYPE_ROOF_SOLAR_PANEL:string "roof-solar-panels")
   (defconst SLOT_TYPE_STANDING_SOLAR_PANEL:string "standing-solar-panel")
@@ -61,13 +64,7 @@
   )
 
   (defcap STAKE:bool (plot-id:string account:string account-guard:guard)
-    (bind (get-token-manifest plot-id)
-      {
-        'type := type
-      }
-      (enforce-guard account-guard)
-      (enforce (= type "plot") "Requires plot type")
-    )
+    (enforce-guard account-guard)
   )
 
   (defcap UNSTAKE:bool (plot-id:string account:string)
@@ -134,7 +131,9 @@
       (
         (escrow-plot-guard (create-plot-guard plot-id))
         (escrow-account (create-escrow-account plot-id))
+        (is-plot:bool (item-has-policy-active plot-id 'immutable-policies free.energetic-plot-policy))
       )
+      (enforce is-plot "Requires plot policy")
       (with-capability (STAKE plot-id account account-guard)
         (marmalade.ledger.transfer-create plot-id account escrow-account escrow-plot-guard amount)
         ; (coin::create-account escrow-account escrow-plot-guard) ; @todo change to energetic-coin
@@ -192,7 +191,7 @@
 
   (defun upgrade-plot:bool (plot-id:string item-id:string amount:decimal account:string account-guard:guard)
     (with-capability (UPGRADE_PLOT plot-id item-id account account-guard)
-      (bind (get-token-manifest item-id)
+      (bind (get-token-metadata item-id)
         {
           'type := type
         }
@@ -205,7 +204,7 @@
           (marmalade.ledger.transfer-create item-id account escrow-account escrow-plot-guard amount)
           (let*
             (
-              (item-has-policy-active:bool (item-has-policy-active item-id 'immutable-policies free.energetic-upgradable-item-policy))
+              (item-has-policy-active:bool (item-has-policy-active item-id 'immutable-policies free.energetic-plot-item-policy))
               (item-max-amount:decimal (get-slot-type-max type))
               (current-staked-amount:decimal (marmalade.ledger.get-balance item-id escrow-account))
             )
@@ -305,7 +304,7 @@
   )
 )
 
-(if (read-msg 'upgrade )
+(if (read-msg "upgrade")
   ["upgrade complete"]
   [
     (create-table plot-table)

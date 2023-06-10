@@ -56,16 +56,12 @@
   (use marmalade.ledger)
   (use marmalade.policy-manager)
   (use marmalade.collection-policy-v1)
-  (use free.energetic-manifest-policy)
   (use free.energetic-constants)
+  (use free.energetic-plot-policy)
 
   (env-data
     {
       'dao: {
-        'keys: ["dao"],
-        'pred: "keys-all"
-      },
-      'dao-manifest-upgrader: {
         'keys: ["dao"],
         'pred: "keys-all"
       },
@@ -77,15 +73,10 @@
         'keys: ["dao"],
         'pred: "keys-all"
       },
-      'item-manifest: {
-        'manifest: PLOT_MANIFEST,
-        'type: "plot",
-        'guard: {
-          'keys: ["dao"],
-          'pred: "keys-all"
-        }
-      },
-      "collection-id": PLOT_COLLECTION_ID
+      'collection-id: PLOT_COLLECTION_ID,
+      'token: {
+        'index: "1"
+      }
     }
   )
 
@@ -95,7 +86,6 @@
         'key: 'dao,
         'caps: [
           (marmalade.collection-policy-v1.OPERATOR PLOT_COLLECTION_ID)
-          (free.energetic-manifest-policy.UPGRADE PLOT_ONE_TOKEN_ID)
         ]
       }
     ]
@@ -106,9 +96,9 @@
     (create-token PLOT_ONE_TOKEN_ID 0 "plot-1-uri" PLOT_COLLECTION_POLICIES)
   )
 
-  (expect "Update the manifest of the Plot token"
-    "Write succeeded"
-    (upgrade-manifest PLOT_ONE_TOKEN_ID (at 'manifest (read-msg 'item-manifest )))
+  (expect "Token id of index 1 is PLOT_ONE_TOKEN_ID"
+    PLOT_ONE_TOKEN_ID
+    (get-plot-token-id 1)
   )
 
   (expect "Validate energetic-plot collection"
@@ -153,7 +143,6 @@
   (use marmalade.ledger)
   (use marmalade.policy-manager)
   (use marmalade.collection-policy-v1)
-  (use free.energetic-manifest-policy)
   (use free.energetic-constants)
   (use free.energetic-plot-staking-center)
 
@@ -171,13 +160,13 @@
         'keys: ["dao"],
         'pred: "keys-all"
       },
-      'item-manifest: {
-        'manifest: ROOF_SOLAR_PANEL_MANIFEST,
-        'type: SLOT_TYPE_ROOF_SOLAR_PANEL,
-        'guard: {
-          'keys: ["dao"],
-          'pred: "keys-all"
-        }
+      'item-metadata: {
+        'power-rate: 2.2,
+        'type: SLOT_TYPE_ROOF_SOLAR_PANEL
+      },
+      'item-metadata-guard: {
+        'keys: ["dao"],
+        'pred: "keys-all"
       },
       "collection-id": PLOT_UPGRADES_COLLECTION_ID
     }
@@ -189,7 +178,6 @@
         'key: 'dao,
         'caps: [
           (marmalade.collection-policy-v1.OPERATOR PLOT_UPGRADES_COLLECTION_ID)
-          (free.energetic-manifest-policy.UPGRADE ROOF_SOLAR_PANEL_TOKEN_ID)
         ]
       }
     ]
@@ -200,10 +188,10 @@
     (create-token ROOF_SOLAR_PANEL_TOKEN_ID 0 "roof-solar-panel-upgrade-uri" PLOT_UPGRADES_COLLECTION_POLICIES)
   )
 
-  (expect "Update the manifest of the Plot token"
-    "Write succeeded"
-    (upgrade-manifest ROOF_SOLAR_PANEL_TOKEN_ID (at 'manifest (read-msg 'item-manifest )))
-  )
+  ;(expect "Update the manifest of the Plot token"
+  ;  "Write succeeded"
+  ;  (upgrade-manifest ROOF_SOLAR_PANEL_TOKEN_ID (at 'manifest (read-msg 'item-manifest )))
+  ;)
 
   (expect "Validate energetic-plot-upgrades collection"
     {

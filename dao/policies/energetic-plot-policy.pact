@@ -1,9 +1,14 @@
-(namespace (read-msg 'ns ))
-(module energetic-upgradable-item-policy GOVERNANCE
+(namespace "free")
+(module energetic-plot-policy GOVERNANCE
 
   (implements kip.token-policy-v2)
   (use kip.token-policy-v2 [token-info])
-  (use kip.token-manifest [manifest])
+
+  (defschema plot
+    id:string
+  )
+
+  (deftable plots:{plot})
 
   ;;
   ;; Capabilities
@@ -12,10 +17,6 @@
   (defcap GOVERNANCE:bool ()
     (enforce-keyset "free.energetic-admin")
   )
-
-  ;;
-  ;; Events
-  ;;
 
   ;;
   ;; Functions
@@ -29,15 +30,27 @@
   ;; Policy
   ;;
 
+  (defun enforce-init:bool (token:object{token-info})
+    (enforce-ledger)
+    (let*
+      (
+        (token-id:string (at 'id token))
+        (token-index:string (at 'index (read-msg "token")))
+      )
+      (insert plots token-index
+        {
+          'id: token-id
+        }  
+      )
+      true
+    )
+  )
+
   (defun enforce-mint:bool (token:object{token-info} account:string guard:guard amount:decimal)
     (enforce-ledger)
   )
 
   (defun enforce-burn:bool (token:object{token-info} account:string amount:decimal)
-    (enforce-ledger)
-  )
-
-  (defun enforce-init:bool (token:object{token-info})
     (enforce-ledger)
   )
 
@@ -60,9 +73,19 @@
   (defun enforce-withdraw:bool (token:object{token-info} seller:string amount:decimal sale-id:string)
     (enforce-ledger)
   )
+
+  ;;
+  ;; Getters
+  ;;
+
+  (defun get-plot-token-id:string (index:integer)
+    (with-read plots (hash index)
+      {
+        'id:= id
+      }
+      id
+    )
+  )
 )
 
-(if (read-msg 'upgrade )
-  ["upgrade complete"]
-  []
-)
+(create-table plots)

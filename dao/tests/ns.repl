@@ -21,8 +21,8 @@
   (namespace (read-msg 'ns ))
   (define-keyset "free.energetic-admin" (read-keyset "energetic-admin"))
 
-  (load "../policies/energetic-upgradable-item-policy.pact")
-  (load "../policies/energetic-manifest-policy.pact")
+  (load "../policies/energetic-plot-item-policy.pact")
+  (load "../policies/energetic-plot-policy.pact")
 
   (load "./constants/collection.pact")
 

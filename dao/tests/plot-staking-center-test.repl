@@ -123,7 +123,7 @@
 
   (expect "Plot doesn't have upgradable item policy"
     false
-    (free.energetic-plot-staking-center.item-has-policy-active PLOT_ONE_TOKEN_ID 'immutable-policies free.energetic-upgradable-item-policy)
+    (free.energetic-plot-staking-center.item-has-policy-active PLOT_ONE_TOKEN_ID 'immutable-policies free.energetic-plot-item-policy)
   )
 (commit-tx)
 
