@@ -24,7 +24,7 @@
 
   (defconst PLOT_COLLECTION_ID:string "collection:DEulkJ-qDySv_BFKQvJEj315-x5JdnFObku8DXk4iKI")
   (defconst PLOT_ONE_TOKEN_ID:string (create-token-id { 'uri: "plot-1-uri", 'precision: 0, 'policies: PLOT_COLLECTION_POLICIES }))
-  (defconst PLOT_STAKING_CENTER_ESCROW_ACCOUNT:string (format "m:free.energetic-plot-staking-center:{}" [PLOT_ONE_TOKEN_ID]))
+  (defconst PLOT_STAKING_CENTER_ESCROW_ACCOUNT:string "u:free.energetic-plot-staking-center.require-PLOT:jMI45gpXhX5GFAGEevWmYTTx0ncVrBS_OaNP50nQZjU")
 
   ;; Roof Solar Panels
   (defconst PLOT_UPGRADES_COLLECTION:object{concrete-policy}

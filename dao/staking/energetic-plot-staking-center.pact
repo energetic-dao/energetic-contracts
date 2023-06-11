@@ -64,7 +64,7 @@
   )
 
   (defcap STAKE:bool (plot-id:string account:string escrow-account:string amount:decimal)
-    true
+    (compose-capability (PLOT plot-id))
   )
 
   (defcap UNSTAKE:bool (plot-id:string account:string)
@@ -72,6 +72,7 @@
       {
         "account-guard" := guard
       }
+      (compose-capability (PLOT plot-id))
       (enforce-guard guard)
     )
   )
@@ -105,7 +106,7 @@
   )
 
   (defun create-plot-guard:guard (plot-id:string)
-    (create-module-guard plot-id)
+    (create-user-guard (require-PLOT plot-id))
   )
 
   (defun create-escrow-account (plot-id:string)
