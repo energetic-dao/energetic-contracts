@@ -63,8 +63,8 @@
     (enforce-keyset OPERATOR_KEYSET)
   )
 
-  (defcap STAKE:bool (plot-id:string account:string account-guard:guard)
-    (enforce-guard account-guard)
+  (defcap STAKE:bool (plot-id:string account:string escrow-account:string amount:decimal)
+    true
   )
 
   (defcap UNSTAKE:bool (plot-id:string account:string)
@@ -134,7 +134,7 @@
         (is-plot:bool (item-has-policy-active plot-id 'immutable-policies free.energetic-plot-policy))
       )
       (enforce is-plot "Requires plot policy")
-      (with-capability (STAKE plot-id account account-guard)
+      (with-capability (STAKE plot-id account escrow-account amount)
         (marmalade.ledger.transfer-create plot-id account escrow-account escrow-plot-guard amount)
         ; (coin::create-account escrow-account escrow-plot-guard) ; @todo change to energetic-coin
         (write plot-table plot-id

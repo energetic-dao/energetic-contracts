@@ -28,7 +28,7 @@
         'key: 'user,
         'caps: [
           (marmalade.ledger.TRANSFER PLOT_ONE_TOKEN_ID "k:user" PLOT_STAKING_CENTER_ESCROW_ACCOUNT 1.0),
-          (free.energetic-plot-staking-center.STAKE PLOT_ONE_TOKEN_ID "k:user" (read-keyset "user")),
+          (free.energetic-plot-staking-center.STAKE PLOT_ONE_TOKEN_ID "k:user" PLOT_STAKING_CENTER_ESCROW_ACCOUNT 1.0),
           (free.energetic-plot-staking-center.UNSTAKE PLOT_ONE_TOKEN_ID "k:user")
         ]
       }
@@ -157,11 +157,14 @@
         'key: 'user,
         'caps: [
           (marmalade.ledger.TRANSFER PLOT_ONE_TOKEN_ID "k:user" PLOT_STAKING_CENTER_ESCROW_ACCOUNT 1.0),
-          (free.energetic-plot-staking-center.STAKE PLOT_ONE_TOKEN_ID "k:user" (read-keyset "user"))
+          (free.energetic-plot-staking-center.STAKE PLOT_ONE_TOKEN_ID "k:user" PLOT_STAKING_CENTER_ESCROW_ACCOUNT 1.0)
         ]
       }
     ]
   )
+
+  ;(n_fa5008565e171dca599c6accfd71d6006ddecce0.ledger.TRANSFER "t:i0SQJPvBJrcDR-eitye50meLSFaHioc2jXxpTZHC_pM" "k:00ea18feef966289dbd6b9b63ba6161c86fce643a9e684ad0d8e57f68bccd2dc" "m:free.energetic-plot-staking-center:t:i0SQJPvBJrcDR-eitye50meLSFaHioc2jXxpTZHC_pM" 1.0)
+  ;(free.energetic-plot-staking-center.STAKE "t:i0SQJPvBJrcDR-eitye50meLSFaHioc2jXxpTZHC_pM" "k:00ea18feef966289dbd6b9b63ba6161c86fce643a9e684ad0d8e57f68bccd2dc" "m:free.energetic-plot-staking-center:t:i0SQJPvBJrcDR-eitye50meLSFaHioc2jXxpTZHC_pM" 1.0)
 
   (free.energetic-plot-staking-center.lock-plot PLOT_ONE_TOKEN_ID 1.0 "k:user" (read-keyset "user"))
 (commit-tx)

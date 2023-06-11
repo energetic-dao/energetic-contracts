@@ -98,7 +98,7 @@
 
   (expect "Token id of index 1 is PLOT_ONE_TOKEN_ID"
     PLOT_ONE_TOKEN_ID
-    (get-plot-token-id 1)
+    (get-plot-token-id "1")
   )
 
   (expect "Validate energetic-plot collection"

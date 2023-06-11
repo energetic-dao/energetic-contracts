@@ -78,8 +78,8 @@
   ;; Getters
   ;;
 
-  (defun get-plot-token-id:string (index:integer)
-    (with-read plots (hash index)
+  (defun get-plot-token-id:string (index:string)
+    (with-read plots index
       {
         'id:= id
       }
