@@ -169,12 +169,14 @@
             (staked-plot-items:[object{plot-staking-schema}] (get-staked-items-on-plot plot-id))
             (transfer-staked-item
               (lambda (staked-item:object)
+                (install-capability (free.energetic-enumerable-collection-policy.TRANSFER (at 'item-id staked-item) escrow-account account (at 'amount staked-item)))
                 (install-capability (marmalade.ledger.TRANSFER (at 'item-id staked-item) escrow-account account (at 'amount staked-item)))
                 (marmalade.ledger.transfer (at 'item-id staked-item) escrow-account account (at 'amount staked-item))
               )
             )
           )
           (map transfer-staked-item staked-plot-items)
+          (install-capability (free.energetic-enumerable-collection-policy.TRANSFER plot-id escrow-account account amount))
           (install-capability (marmalade.ledger.TRANSFER plot-id escrow-account account amount))
           (marmalade.ledger.transfer plot-id escrow-account account amount)
           ; @todo add claim for energetic-coin rewards
@@ -201,6 +203,7 @@
             'escrow-account := escrow-account,
             'escrow-guard := escrow-plot-guard
           }
+          (install-capability (free.energetic-enumerable-collection-policy.TRANSFER item-id account escrow-account amount))
           (install-capability (marmalade.ledger.TRANSFER item-id account escrow-account amount))
           (marmalade.ledger.transfer-create item-id account escrow-account escrow-plot-guard amount)
           (let*
