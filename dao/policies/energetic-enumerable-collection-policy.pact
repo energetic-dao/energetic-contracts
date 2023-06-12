@@ -19,19 +19,29 @@
       token-id:string
       owner:string
     )
-
-    (defschema owner-item
-      token-ids:[string]
-    )
   
     (deftable item-table:{item-schema})
-  
+
     ;;
     ;; Capabilities
     ;;
   
     (defcap GOVERNANCE ()
       (enforce-keyset ADMIN_KEYSET)
+    )
+
+    (defcap TRANSFER (token-id:string sender:string receiver:string amount:decimal)
+      @managed
+      (enforce-ledger)
+      true
+    )
+
+    ;;
+    ;; Utils
+    ;;
+
+    (defun key:string (token-id:string account:string)
+      (format "{}:{}" [token-id account])
     )
   
     ;;
@@ -40,6 +50,23 @@
   
     (defun enforce-ledger:bool ()
       (enforce-guard (marmalade.ledger.ledger-guard))
+    )
+
+    (defun transfer (token-id:string sender:string receiver:string amount:decimal)
+      (with-capability (TRANSFER token-id sender receiver amount)
+        (with-read item-table (key token-id sender)
+          {
+            'collection-id := collection-id
+          }
+          (write item-table (key token-id receiver)
+            {
+              'token-id: token-id,
+              'collection-id: collection-id,
+              'owner: sender
+            }
+          )
+        )
+      )
     )
   
     ;;
@@ -57,38 +84,14 @@
           (token-id:string (at 'id token))
           (collection-id:string (read-msg "collection-id"))
         )
-        (insert item-table token-id
+        (write item-table (key token-id account)
           {
             'collection-id: collection-id,
             'token-id: token-id,
             'owner: account
-          }  
-        )
-        (with-default-read owner-item account
-          {
-            'token-ids: []
           }
-          {
-            'token-ids := token-ids
-          }
-          (if (= [])
-            [
-              (insert owner-item account
-                {
-                  'token-ids: [token-id]
-                }
-              )
-            ]
-            [
-              (update owner-item account
-                {
-                  'token-ids: (+ token-ids [token-id])
-                }
-              )
-            ]
-          )
-          true
         )
+        true
       )
     )
   
@@ -101,58 +104,13 @@
     )
   
     (defun enforce-buy:bool (token:object{token-info} seller:string buyer:string buyer-guard:guard amount:decimal sale-id:string)
-      (enforce-ledger)
+      (transfer (at 'id token) seller buyer amount)
     )
   
     (defun enforce-transfer:bool (token:object{token-info} sender:string guard:guard receiver:string amount:decimal)
-      (enforce-ledger)
-      (let
-        (
-          (token-id:string (at 'id token))
-        )
-        (update item-table token-id
-          {
-            'owner: receiver
-          }
-        )
-        (with-default-read owner-item receiver
-          {
-            'token-ids: []
-          }
-          {
-            'token-ids := token-ids
-          }
-          (if (= [])
-            [
-              (insert owner-item receiver
-                {
-                  'token-ids: [token-id]
-                }
-              )
-            ]
-            [
-              (update owner-item receiver
-                {
-                  'token-ids: (+ token-ids [token-id])
-                }
-              )
-            ]
-          )
-        )
-        (with-read owner-item sender
-          {
-            'token-ids := token-ids
-          }
-          (update owner-item sender
-            {
-              'token-ids: (filter (!= token-id) token-ids)
-            }
-          )
-        )
-        true
-      )
+      (transfer (at 'id token) sender receiver amount)
     )
-  
+
     (defun enforce-withdraw:bool (token:object{token-info} seller:string amount:decimal sale-id:string)
       (enforce-ledger)
     )
@@ -166,7 +124,32 @@
     ;; Getters
     ;;
   
-
+    (defun get-collection-tokens-for-user (collection-id:string owner:string)
+      (let
+        (
+          (map-items (lambda (item)
+            {
+              'info: (marmalade.ledger.get-token-info (at 'token-id item)),
+              'balance: (marmalade.ledger.get-balance (at 'token-id item) owner)
+            })
+          )
+        )
+        (filter (where 'balance (!= 0.0)) 
+          (map
+            (map-items)
+            (select item-table
+              [
+                'token-id
+              ]
+              (and?
+                (where 'collection-id (= collection-id))
+                (where 'owner (= owner))
+              )
+            )
+          )
+        )
+      )
+    )
   )
   
   (create-table item-table)
