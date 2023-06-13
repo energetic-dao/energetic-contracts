@@ -125,10 +125,15 @@
     ;;
 
     (defun get-token-info (item:object owner:string)
-      {
-        'info: (marmalade.ledger.get-token-info (at 'token-id item)),
-        'balance: (marmalade.ledger.get-balance (at 'token-id item) owner)
-      }
+      (if (= owner "")
+        {
+          'info: (marmalade.ledger.get-token-info (at 'token-id item))
+        }
+        {
+          'info: (marmalade.ledger.get-token-info (at 'token-id item)),
+          'balance: (marmalade.ledger.get-balance (at 'token-id item) owner)
+        }
+      )
     )
   
     (defun get-collection-tokens-for-account (collection-id:string owner:string)
@@ -148,6 +153,23 @@
                 (where 'owner (= owner))
               )
             )
+          )
+        )
+      )
+    )
+
+    (defun get-collection-tokens (collection-id:string)
+      (let
+        (
+          (map-items (lambda (item) (get-token-info item "")))
+        )
+        (map
+          (map-items)
+          (select item-table
+            [
+              'token-id
+            ]
+            (where 'collection-id (= collection-id))
           )
         )
       )
