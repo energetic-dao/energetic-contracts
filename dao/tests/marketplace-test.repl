@@ -49,6 +49,7 @@
         'caps: [
           (BUY PLOT_ONE_TOKEN_ID "k:dao" "k:user"  1.0 (time "2024-05-23T00:00:00Z") "DldRwCblQ7Loqy6wYJnaodHl30d3j3eH-qtFzfEv46g")
           (coin.TRANSFER "k:user" "c:0ChSqSoWjhPTv0RdCeEqRZFdlz4RS1sbLc6og9V9P8A" 100.0)
+          (free.energetic-enumerable-collection-policy.TRANSFER "t:GekcmtOUl_5Wrry2AyTJlftV2dzCxeqKU-TO_LMcxiM" "k:dao" "k:user" 1.0)
         ]
       }
     ]
@@ -136,6 +137,7 @@
         'caps: [
           (BUY ROOF_SOLAR_PANEL_TOKEN_ID "k:dao" "k:user"  6.0 (time "2024-05-24T00:00:00Z") "VW6DyMZfS2Y5FC-818218B1mqC-iPYEO8k5eDKARTIc")
           (coin.TRANSFER "k:user" "c:qghCCQC61BYM3VuS-wVxRCJoZGh6Ky8boBcSGoivDi4" 60.0)
+          (free.energetic-enumerable-collection-policy.TRANSFER "t:XuRlIGazr0ctnVKlJ5HY3Gs2PXHn0wYt1Vkzl3WGWy0" "k:dao" "k:user" 6.0)
         ]
       }
     ]

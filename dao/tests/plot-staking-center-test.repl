@@ -29,7 +29,8 @@
         'caps: [
           (marmalade.ledger.TRANSFER PLOT_ONE_TOKEN_ID "k:user" PLOT_STAKING_CENTER_ESCROW_ACCOUNT 1.0),
           (free.energetic-plot-staking-center.STAKE PLOT_ONE_TOKEN_ID "k:user" PLOT_STAKING_CENTER_ESCROW_ACCOUNT 1.0),
-          (free.energetic-plot-staking-center.UNSTAKE PLOT_ONE_TOKEN_ID "k:user")
+          (free.energetic-plot-staking-center.UNSTAKE PLOT_ONE_TOKEN_ID "k:user"),
+          (free.energetic-enumerable-collection-policy.TRANSFER "t:GekcmtOUl_5Wrry2AyTJlftV2dzCxeqKU-TO_LMcxiM" "k:user" "u:free.energetic-plot-staking-center.require-PLOT:dPqAMWtk1_RwweZNkuWDRVh8GdsamXz7e_jcSo72q0c" 1.0)
         ]
       }
     ]
@@ -157,7 +158,8 @@
         'key: 'user,
         'caps: [
           (marmalade.ledger.TRANSFER PLOT_ONE_TOKEN_ID "k:user" PLOT_STAKING_CENTER_ESCROW_ACCOUNT 1.0),
-          (free.energetic-plot-staking-center.STAKE PLOT_ONE_TOKEN_ID "k:user" PLOT_STAKING_CENTER_ESCROW_ACCOUNT 1.0)
+          (free.energetic-plot-staking-center.STAKE PLOT_ONE_TOKEN_ID "k:user" PLOT_STAKING_CENTER_ESCROW_ACCOUNT 1.0),
+          (free.energetic-enumerable-collection-policy.TRANSFER "t:GekcmtOUl_5Wrry2AyTJlftV2dzCxeqKU-TO_LMcxiM" "k:user" "u:free.energetic-plot-staking-center.require-PLOT:dPqAMWtk1_RwweZNkuWDRVh8GdsamXz7e_jcSo72q0c" 1.0)
         ]
       }
     ]
@@ -196,7 +198,8 @@
         'key: 'user,
         'caps: [
           (marmalade.ledger.TRANSFER ROOF_SOLAR_PANEL_TOKEN_ID PLOT_STAKING_CENTER_ESCROW_ACCOUNT "k:user" 2.0),
-          (free.energetic-plot-staking-center.UPGRADE_PLOT PLOT_ONE_TOKEN_ID ROOF_SOLAR_PANEL_TOKEN_ID "k:user" (read-keyset "user"))
+          (free.energetic-plot-staking-center.UPGRADE_PLOT PLOT_ONE_TOKEN_ID ROOF_SOLAR_PANEL_TOKEN_ID "k:user" (read-keyset "user")),
+          (free.energetic-enumerable-collection-policy.TRANSFER "t:XuRlIGazr0ctnVKlJ5HY3Gs2PXHn0wYt1Vkzl3WGWy0" "k:user" "u:free.energetic-plot-staking-center.require-PLOT:dPqAMWtk1_RwweZNkuWDRVh8GdsamXz7e_jcSo72q0c" 2.0)
         ]
       }
     ]
@@ -249,7 +252,8 @@
         'key: 'user,
         'caps: [
           (marmalade.ledger.TRANSFER ROOF_SOLAR_PANEL_TOKEN_ID PLOT_STAKING_CENTER_ESCROW_ACCOUNT "k:user" 4.0),
-          (free.energetic-plot-staking-center.UPGRADE_PLOT PLOT_ONE_TOKEN_ID ROOF_SOLAR_PANEL_TOKEN_ID "k:user" (read-keyset "user"))
+          (free.energetic-plot-staking-center.UPGRADE_PLOT PLOT_ONE_TOKEN_ID ROOF_SOLAR_PANEL_TOKEN_ID "k:user" (read-keyset "user")),
+          (free.energetic-enumerable-collection-policy.TRANSFER "t:XuRlIGazr0ctnVKlJ5HY3Gs2PXHn0wYt1Vkzl3WGWy0" "k:user" "u:free.energetic-plot-staking-center.require-PLOT:dPqAMWtk1_RwweZNkuWDRVh8GdsamXz7e_jcSo72q0c" 4.0)
         ]
       }
     ]
@@ -288,8 +292,9 @@
         'key: 'user,
         'caps: [
           (marmalade.ledger.TRANSFER ROOF_SOLAR_PANEL_TOKEN_ID PLOT_STAKING_CENTER_ESCROW_ACCOUNT "k:user" 2.0),
-          (free.energetic-plot-staking-center.UPGRADE_PLOT PLOT_ONE_TOKEN_ID ROOF_SOLAR_PANEL_TOKEN_ID "k:user" (read-keyset "user"))
-          (free.energetic-plot-staking-center.UNSTAKE PLOT_ONE_TOKEN_ID "k:user")
+          (free.energetic-plot-staking-center.UPGRADE_PLOT PLOT_ONE_TOKEN_ID ROOF_SOLAR_PANEL_TOKEN_ID "k:user" (read-keyset "user")),
+          (free.energetic-plot-staking-center.UNSTAKE PLOT_ONE_TOKEN_ID "k:user"),
+          (free.energetic-enumerable-collection-policy.TRANSFER "t:XuRlIGazr0ctnVKlJ5HY3Gs2PXHn0wYt1Vkzl3WGWy0" "k:user" "u:free.energetic-plot-staking-center.require-PLOT:dPqAMWtk1_RwweZNkuWDRVh8GdsamXz7e_jcSo72q0c" 2.0)
         ]
       }
     ]

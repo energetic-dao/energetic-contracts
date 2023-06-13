@@ -17,7 +17,8 @@
       'nfp-mint-guard: {
         'keys: ["dao"],
         'pred: "keys-all"
-      }
+      },
+      'collection-id: PLOT_COLLECTION_ID
     }
   )
 
@@ -60,7 +61,8 @@
       'nfp-mint-guard: {
         'keys: ["dao"],
         'pred: "keys-all"
-      }
+      },
+      'collection-id: PLOT_COLLECTION_ID
     }
   )
 
@@ -104,7 +106,8 @@
       'cp-mint-guard: {
         'keys: ["dao"],
         'pred: "keys-all"
-      }
+      },
+      'collection-id: PLOT_UPGRADES_COLLECTION_ID
     }
   )
 
@@ -141,7 +144,8 @@
       'cp-mint-guard: {
         'keys: ["dao"],
         'pred: "keys-all"
-      }
+      },
+      'collection-id: PLOT_UPGRADES_COLLECTION_ID
     }
   )
 

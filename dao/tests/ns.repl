@@ -23,6 +23,7 @@
 
   (load "../policies/energetic-plot-item-policy.pact")
   (load "../policies/energetic-plot-policy.pact")
+  (load "../policies/energetic-enumerable-collection-policy.pact")
 
   (load "./constants/collection.pact")
 
