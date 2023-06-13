@@ -41,7 +41,9 @@
         'escrow-account: PLOT_STAKING_CENTER_ESCROW_ACCOUNT,
         'original-owner: "k:user",
         'account-guard: (read-keyset "user"),
-        'locked-since: (time "1970-01-01T00:00:00Z")
+        'locked-since: (time "1970-01-01T00:00:00Z"),
+        'locked: true,
+        'token-ids: []
     }
     (free.energetic-plot-staking-center.lock-plot PLOT_ONE_TOKEN_ID 1.0 "k:user" (read-keyset "user"))
   )
@@ -355,6 +357,9 @@
     ]
   )
 
+  (free.energetic-plot-staking-center.get-plot PLOT_ONE_TOKEN_ID)
+
+
   (expect "Unstaking plot"
     true
     (free.energetic-plot-staking-center.unlock-plot PLOT_ONE_TOKEN_ID 1.0 "k:user")
@@ -369,5 +374,20 @@
     6.0
     (marmalade.ledger.get-balance ROOF_SOLAR_PANEL_TOKEN_ID "k:user")
   )
+  
+  (free.energetic-plot-staking-center.get-plot PLOT_ONE_TOKEN_ID)
 
+  (print ROOF_SOLAR_PANEL_TOKEN_ID)
+  (free.energetic-enumerable-collection-policy.get-collection-tokens-for-account PLOT_UPGRADES_COLLECTION_ID "k:user")
+  (free.energetic-enumerable-collection-policy.get-collection-tokens-for-account PLOT_COLLECTION_ID "k:user")
+
+  (free.energetic-enumerable-collection-policy.get-collection-tokens-for-account PLOT_COLLECTION_ID "k:dao")
+
+  (print "")
+
+  (free.energetic-enumerable-collection-policy.get-tokens-for-account "k:user")
+
+  (print "")
+
+  (free.energetic-enumerable-collection-policy.get-collection-tokens PLOT_COLLECTION_ID)
 (commit-tx)
