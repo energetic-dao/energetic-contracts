@@ -167,7 +167,8 @@
           (map-items)
           (select item-table
             [
-              'token-id
+              'token-id,
+              'owner
             ]
             (where 'collection-id (= collection-id))
           )
