@@ -337,6 +337,30 @@
     (contains policy (at policy-type (at 'policies (marmalade.ledger.get-token-info token-id))))
   )
 
+  (defun get-plot-info:object (plot:object{plot-schema})
+    (+
+      {
+        'locked: (at 'locked plot)
+      } 
+      (marmalade.ledger.get-token-info (at 'plot-id plot))
+    )
+  )
+
+  (defun get-staked-plots (account:string)
+    (map (get-plot-info)
+      (select staked-plots
+        [
+          'plot-id,
+          'locked
+        ]
+        (and? 
+          (where 'locked (= true))
+          (where 'original-owner (= account))
+        )
+      )
+    )
+  )
+
   (defun get-staked-items-on-plot:object{staked-plot-item-schema} (plot-id:string)
     (with-read staked-plots plot-id
       {
