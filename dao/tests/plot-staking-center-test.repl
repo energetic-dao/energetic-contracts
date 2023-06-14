@@ -38,12 +38,13 @@
 
   (expect "Lock plot token in staking center"
     {
-        'escrow-account: PLOT_STAKING_CENTER_ESCROW_ACCOUNT,
-        'original-owner: "k:user",
-        'account-guard: (read-keyset "user"),
-        'locked-since: (time "1970-01-01T00:00:00Z"),
-        'locked: true,
-        'token-ids: []
+      'plot-id: PLOT_ONE_TOKEN_ID,
+      'escrow-account: PLOT_STAKING_CENTER_ESCROW_ACCOUNT,
+      'original-owner: "k:user",
+      'account-guard: (read-keyset "user"),
+      'locked-since: (time "1970-01-01T00:00:00Z"),
+      'locked: true,
+      'token-ids: []
     }
     (free.energetic-plot-staking-center.lock-plot PLOT_ONE_TOKEN_ID 1.0 "k:user" (read-keyset "user"))
   )
@@ -359,6 +360,7 @@
 
   (free.energetic-plot-staking-center.get-plot PLOT_ONE_TOKEN_ID)
 
+  (free.energetic-plot-staking-center.get-staked-plots "k:user")
 
   (expect "Unstaking plot"
     true

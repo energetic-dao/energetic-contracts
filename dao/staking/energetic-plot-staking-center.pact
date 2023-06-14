@@ -11,6 +11,7 @@
   ;;
 
   (defschema plot-schema
+    plot-id:string
     escrow-account:string
     escrow-guard:guard
     original-owner:string
@@ -39,7 +40,7 @@
   ;; Tables
   ;;
 
-  (deftable plots:{plot-schema})
+  (deftable staked-plots:{plot-schema})
   (deftable staked-plot-items:{staked-plot-item-schema})
   (deftable plot-slot-constants:{plot-slot-constant-schema})
 
@@ -74,7 +75,7 @@
   )
 
   (defcap UNSTAKE:bool (plot-id:string account:string)
-    (with-read plots plot-id
+    (with-read staked-plots plot-id
       {
         "account-guard" := guard
       }
@@ -84,7 +85,7 @@
   )
 
   (defcap UPGRADE_PLOT:bool (plot-id:string item-id:string account:string account-guard:guard)
-    (with-read plots plot-id
+    (with-read staked-plots plot-id
       {
         "account-guard" := guard,
         "original-owner" := original-owner
@@ -144,8 +145,9 @@
       (with-capability (STAKE plot-id account escrow-account amount)
         (marmalade.ledger.transfer-create plot-id account escrow-account escrow-plot-guard amount)
         ; (coin::create-account escrow-account escrow-plot-guard) ; @todo change to energetic-coin
-        (write plots plot-id
+        (write staked-plots plot-id
           {
+            'plot-id: plot-id,
             'escrow-account: escrow-account,
             'escrow-guard: escrow-plot-guard,
             'original-owner: account,
@@ -156,6 +158,7 @@
           }
         )
         {
+          'plot-id: plot-id,
           'escrow-account: escrow-account,
           'original-owner: account,
           'account-guard: account-guard,
@@ -200,7 +203,7 @@
           (marmalade.ledger.transfer plot-id escrow-account account amount)
           ; @todo add claim for energetic-coin rewards
 
-          (update plots plot-id
+          (update staked-plots plot-id
             {
               'locked: false,
               'token-ids: []
@@ -247,14 +250,14 @@
               }
             )
 
-            (with-default-read plots plot-id
+            (with-default-read staked-plots plot-id
               {
                 'token-ids: []
               }
               {
                 'token-ids := token-ids
               }
-              (update plots plot-id
+              (update staked-plots plot-id
                 {
                   'token-ids: (+ token-ids (make-list (round amount) item-id))
                 }
@@ -298,7 +301,7 @@
   ;;
 
   (defun get-plot:object{plot-schema} (plot-id:string)
-    (with-read plots plot-id
+    (with-read staked-plots plot-id
       {
         'escrow-account := escrow-account,
         'escrow-guard := escrow-guard,
@@ -309,6 +312,7 @@
         'token-ids := token-ids
       }
       {
+        'plot-id: plot-id,
         'escrow-account: escrow-account,
         'escrow-guard: escrow-guard,
         'original-owner: original-owner,
@@ -334,7 +338,7 @@
   )
 
   (defun get-staked-items-on-plot:object{staked-plot-item-schema} (plot-id:string)
-    (with-read plots plot-id
+    (with-read staked-plots plot-id
       {
         'token-ids := token-ids
       }
@@ -363,10 +367,10 @@
 )
 
 (if (read-msg "upgrade")
+  []
   [
-    (create-table plots)
+    (create-table staked-plots)
     (create-table staked-plot-items)
     (create-table plot-slot-constants)
   ]
-  []
 )
