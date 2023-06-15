@@ -51,7 +51,7 @@
   (defconst ADMIN_KEYSET "free.energetic-admin")
   (defconst OPERATOR_KEYSET "free.energetic-operator")
 
-  (defconst SLOT_TYPE_ROOF_SOLAR_PANEL:string "roof-solar-panels")
+  (defconst SLOT_TYPE_ROOF_SOLAR_PANEL:string "roof-solar-panel")
   (defconst SLOT_TYPE_STANDING_SOLAR_PANEL:string "standing-solar-panel")
   (defconst SLOT_TYPE_WALL_BATTERY:string "wall-battery")
   (defconst SLOT_TYPE_WIND_TURBINE:string "wind-turbine")
@@ -70,7 +70,7 @@
     (enforce-keyset OPERATOR_KEYSET)
   )
 
-  (defcap STAKE:bool (plot-id:string account:string escrow-account:string amount:decimal)
+  (defcap STAKE:bool (plot-id:string account:string amount:decimal)
     (compose-capability (PLOT plot-id))
   )
 
@@ -135,14 +135,14 @@
 
   (defun lock-plot (plot-id:string amount:decimal account:string account-guard:guard)
     (enforce (= amount 1.0) "Amount can only be 1")
-    (let
-      (
-        (escrow-plot-guard (create-plot-guard plot-id))
-        (escrow-account (create-escrow-account plot-id))
-        (is-plot:bool (item-has-policy-active plot-id 'immutable-policies free.energetic-plot-policy))
-      )
-      (enforce is-plot "Requires plot policy")
-      (with-capability (STAKE plot-id account escrow-account amount)
+    (with-capability (STAKE plot-id account amount)
+      (let
+        (
+          (escrow-plot-guard (create-plot-guard plot-id))
+          (escrow-account (create-escrow-account plot-id))
+          (is-plot:bool (item-has-policy-active plot-id 'immutable-policies free.energetic-plot-policy))
+        )
+        (enforce is-plot "Requires plot policy")
         (marmalade.ledger.transfer-create plot-id account escrow-account escrow-plot-guard amount)
         ; (coin::create-account escrow-account escrow-plot-guard) ; @todo change to energetic-coin
         (write staked-plots plot-id
@@ -226,8 +226,6 @@
             'escrow-account := escrow-account,
             'escrow-guard := escrow-plot-guard
           }
-          (install-capability (free.energetic-enumerable-collection-policy.TRANSFER item-id account escrow-account amount))
-          (install-capability (marmalade.ledger.TRANSFER item-id account escrow-account amount))
           (marmalade.ledger.transfer-create item-id account escrow-account escrow-plot-guard amount)
           (let*
             (
@@ -340,8 +338,9 @@
   (defun get-plot-info:object (plot:object{plot-schema})
     (+
       {
-        'locked: (at 'locked plot)
-      } 
+        'locked: (at 'locked plot),
+        'locked-since: (at 'locked-since plot)
+      }
       (marmalade.ledger.get-token-info (at 'plot-id plot))
     )
   )
@@ -351,7 +350,8 @@
       (select staked-plots
         [
           'plot-id,
-          'locked
+          'locked,
+          'locked-since
         ]
         (and? 
           (where 'locked (= true))
@@ -364,8 +364,10 @@
   (defun get-staked-items-on-plot:object{staked-plot-item-schema} (plot-id:string)
     (with-read staked-plots plot-id
       {
+        'locked := locked,
         'token-ids := token-ids
       }
+      (enforce locked "Plot is not locked")
       (map (lambda (token-id:string)
         (with-read staked-plot-items (key plot-id token-id)
           {
