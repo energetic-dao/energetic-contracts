@@ -1,0 +1,90 @@
+(begin-tx "Setup Gas Station")
+  (use test.energetic-gas-station)
+
+  (test-capability (coin.COINBASE))
+  (coin.coinbase GAS_STATION (create-gas-payer-guard) 100.0)
+(commit-tx)
+
+(begin-tx "Success Gas Payer")
+  (use test.energetic-gas-station)
+
+  (env-chain-data
+    {
+      'gas-price:  0.000000000001
+    }
+  )
+
+  (env-data 
+    {
+      "tx-type": "exec",
+      "exec-code": [
+        "(free.energetic-function)"
+      ]
+    }
+  )
+
+  (test-capability (coin.GAS))
+  (test-capability (GAS_PAYER "alice" 1 1.0))
+  (expect "GAS_PAYER Cap granted"
+    "Write succeeded"
+    (coin.buy-gas "energetic-gas-station" 1.0)
+  )
+
+  (env-keys ["energetic-admin"])
+  (expect "buy-gas succeeds without GAS_PAYER"
+    "Write succeeded"
+    (coin.buy-gas "energetic-gas-station" 1.0)
+  )
+(commit-tx)
+
+(begin-tx "Failed Gas Payer for namespace")
+  (use test.energetic-gas-station)
+
+  (env-chain-data
+    {
+      'gas-price:  0.000000000001
+    }
+  )
+
+  (env-data 
+    {
+      "tx-type": "exec",
+      "exec-code": [
+        "(free.dex-function)"
+      ]
+    }
+  )
+
+  (test-capability (coin.GAS))
+  (expect-failure "GAS_PAYER Cap not granted"
+    "only free.energetic- namespace"
+    (test-capability (GAS_PAYER "alice" 1 1.0))
+  )
+(commit-tx)
+
+
+(begin-tx "Failed Gas Payer for tx-type")
+  (use test.energetic-gas-station)
+
+  (env-chain-data
+    {
+      'gas-price:  0.000000000001
+    }
+  )
+
+  (env-data 
+    {
+      "tx-type": "unknown",
+      "exec-code": [
+        "(free.energetic-function)"
+      ]
+    }
+  )
+
+  (test-capability (coin.GAS))
+  (expect-failure "GAS_PAYER Cap not granted"
+    "Inside an exec"
+    (test-capability (GAS_PAYER "alice" 1 1.0))
+  )
+(commit-tx)
+

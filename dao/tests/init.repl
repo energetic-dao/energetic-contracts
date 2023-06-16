@@ -5,6 +5,7 @@
 (load "./constants/coinbase.repl")
 
 (print "Running tests...")
+(load "./gas-station-test.repl")
 (load "./colection-test.repl")
 (load "./mint-test.repl")
 (load "./marketplace-test.repl")
