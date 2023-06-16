@@ -9,3 +9,6 @@
 (load "./colection-test.repl")
 (load "./mint-test.repl")
 (load "./marketplace-test.repl")
+
+; Staking tests
+(load "./plot-staking-center-test.repl")

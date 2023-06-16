@@ -2,8 +2,9 @@
   (env-data
     {
       'energetic-admin: ["energetic-admin"],
+      'energetic-operator: ["energetic-operator"],
       'energetic-gas-admin: ["energetic-gas-admin"],
-      'ns: "test",
+      'ns: "free",
       'upgrade: false
     }
   )
@@ -19,13 +20,15 @@
 
   (define-namespace (read-msg 'ns ) (read-keyset "energetic-admin" ) (read-keyset "energetic-admin"))
   (namespace (read-msg 'ns ))
-  (define-keyset "test.energetic-admin" (read-keyset "energetic-admin"))
+  (define-keyset "free.energetic-admin" (read-keyset "energetic-admin"))
   (define-keyset "test.energetic-gas-admin" (read-keyset "energetic-gas-admin"))
 
   (load "../gas-station/energetic-gas-station.pact")
+  (load "../policies/energetic-plot-item-policy.pact")
+  (load "../policies/energetic-plot-policy.pact")
+  (load "../policies/energetic-enumerable-collection-policy.pact")
 
-  (load "../policies/energetic-upgradable-item-policy.pact")
-  (load "../policies/energetic-manifest-policy.pact")
+  (load "./constants/collection.pact")
 
-  (load "./constants/collection.repl")
+  (load "../staking/energetic-plot-staking-center.pact")
 (commit-tx)

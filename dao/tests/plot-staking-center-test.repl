@@ -1,0 +1,398 @@
+(begin-tx "Lock plot token in staking pool")
+  (use marmalade.ledger)
+  (use marmalade.policy-manager)
+  (use marmalade.collection-policy-v1)
+  (use free.energetic-constants)
+  (use free.energetic-plot-staking-center)
+
+  (env-data
+    {
+      'dao: {
+        'keys: ["dao"],
+        'pred: "keys-all"
+      },
+      'user: {
+        'keys: ["user"],
+        'pred: "keys-all"
+      }
+    }
+  )
+
+  (env-sigs
+    [
+      {
+        'key: 'dao,
+        'caps: []
+      },
+      {
+        'key: 'user,
+        'caps: [
+          (marmalade.ledger.TRANSFER PLOT_ONE_TOKEN_ID "k:user" PLOT_STAKING_CENTER_ESCROW_ACCOUNT 1.0),
+          (free.energetic-plot-staking-center.STAKE PLOT_ONE_TOKEN_ID "k:user" 1.0),
+          (free.energetic-plot-staking-center.UNSTAKE PLOT_ONE_TOKEN_ID "k:user"),
+          (free.energetic-enumerable-collection-policy.TRANSFER "t:GekcmtOUl_5Wrry2AyTJlftV2dzCxeqKU-TO_LMcxiM" "k:user" "u:free.energetic-plot-staking-center.require-PLOT:dPqAMWtk1_RwweZNkuWDRVh8GdsamXz7e_jcSo72q0c" 1.0)
+        ]
+      }
+    ]
+  )
+
+  (expect "Lock plot token in staking center"
+    {
+      'plot-id: PLOT_ONE_TOKEN_ID,
+      'escrow-account: PLOT_STAKING_CENTER_ESCROW_ACCOUNT,
+      'original-owner: "k:user",
+      'account-guard: (read-keyset "user"),
+      'locked-since: (time "1970-01-01T00:00:00Z"),
+      'locked: true,
+      'token-ids: []
+    }
+    (free.energetic-plot-staking-center.lock-plot PLOT_ONE_TOKEN_ID 1.0 "k:user" (read-keyset "user"))
+  )
+
+  (expect "Plot to be stored in escrow account after lock"
+    1.0
+    (marmalade.ledger.get-balance PLOT_ONE_TOKEN_ID PLOT_STAKING_CENTER_ESCROW_ACCOUNT)
+  )
+
+  (expect "Plot to be removed from owner's account after lock"
+    0.0
+    (marmalade.ledger.get-balance PLOT_ONE_TOKEN_ID "k:user")
+  )
+
+  (expect "Unlock plot token in staking center"
+    true
+    (free.energetic-plot-staking-center.unlock-plot PLOT_ONE_TOKEN_ID 1.0 "k:user")
+  )
+
+  (expect "Plot to be removed from escrow account after unlock"
+    0.0
+    (marmalade.ledger.get-balance PLOT_ONE_TOKEN_ID PLOT_STAKING_CENTER_ESCROW_ACCOUNT)
+  )
+
+  (expect "Plot to be restored in owner's account after unlock"
+    1.0
+    (marmalade.ledger.get-balance PLOT_ONE_TOKEN_ID "k:user")
+  )
+(commit-tx)
+
+(begin-tx "Setting up plot slot constants")
+  (use free.energetic-constants)
+  (use free.energetic-plot-staking-center)
+
+  (env-data
+    {
+      'energetic-operator: {
+        'keys: ["energetic-operator"],
+        'pred: "keys-all"
+      },
+      'dao: {
+        'keys: ["dao"],
+        'pred: "keys-all"
+      }
+    }
+  )
+
+  (env-sigs
+    [
+      {
+        'key: 'energetic-operator,
+        'caps: [
+          (OPERATOR)
+        ]
+      },
+      {
+        'key: 'dao,
+        'caps: []
+      }
+    ]
+  )
+
+  (expect "Set plot slot constants"
+    {
+      'type: SLOT_TYPE_ROOF_SOLAR_PANEL,
+      'max: 4.0
+    }
+    (free.energetic-plot-staking-center.set-slot-type-max SLOT_TYPE_ROOF_SOLAR_PANEL 4.0)
+  )
+
+  (expect "Validate plot slot constants for type"
+    4.0
+    (free.energetic-plot-staking-center.get-slot-type-max SLOT_TYPE_ROOF_SOLAR_PANEL)
+  )
+
+  (expect-failure "Cannot add unknow plot slot type"
+    (format "row not found: {}" [(hash "unknown-type")])
+    (free.energetic-plot-staking-center.get-slot-type-max "unknown-type")
+  )
+
+  (expect "Plot doesn't have upgradable item policy"
+    false
+    (free.energetic-plot-staking-center.item-has-policy-active PLOT_ONE_TOKEN_ID 'immutable-policies free.energetic-plot-item-policy)
+  )
+(commit-tx)
+
+(begin-tx "Locking plot")
+  (use marmalade.ledger)
+  (use marmalade.policy-manager)
+  (use marmalade.collection-policy-v1)
+  (use free.energetic-constants)
+  (use free.energetic-plot-staking-center)
+
+  (env-data
+    {
+      'dao: {
+        'keys: ["dao"],
+        'pred: "keys-all"
+      },
+      'user: {
+        'keys: ["user"],
+        'pred: "keys-all"
+      }
+    }
+  )
+
+  (env-sigs
+    [
+      {
+        'key: 'dao,
+        'caps: []
+      },
+      {
+        'key: 'user,
+        'caps: [
+          (marmalade.ledger.TRANSFER PLOT_ONE_TOKEN_ID "k:user" PLOT_STAKING_CENTER_ESCROW_ACCOUNT 1.0),
+          (free.energetic-plot-staking-center.STAKE PLOT_ONE_TOKEN_ID "k:user" 1.0),
+          (free.energetic-enumerable-collection-policy.TRANSFER "t:GekcmtOUl_5Wrry2AyTJlftV2dzCxeqKU-TO_LMcxiM" "k:user" "u:free.energetic-plot-staking-center.require-PLOT:dPqAMWtk1_RwweZNkuWDRVh8GdsamXz7e_jcSo72q0c" 1.0)
+        ]
+      }
+    ]
+  )
+
+  ;(n_fa5008565e171dca599c6accfd71d6006ddecce0.ledger.TRANSFER "t:i0SQJPvBJrcDR-eitye50meLSFaHioc2jXxpTZHC_pM" "k:00ea18feef966289dbd6b9b63ba6161c86fce643a9e684ad0d8e57f68bccd2dc" "m:free.energetic-plot-staking-center:t:i0SQJPvBJrcDR-eitye50meLSFaHioc2jXxpTZHC_pM" 1.0)
+  ;(free.energetic-plot-staking-center.STAKE "t:i0SQJPvBJrcDR-eitye50meLSFaHioc2jXxpTZHC_pM" "k:00ea18feef966289dbd6b9b63ba6161c86fce643a9e684ad0d8e57f68bccd2dc" "m:free.energetic-plot-staking-center:t:i0SQJPvBJrcDR-eitye50meLSFaHioc2jXxpTZHC_pM" 1.0)
+
+  (free.energetic-plot-staking-center.lock-plot PLOT_ONE_TOKEN_ID 1.0 "k:user" (read-keyset "user"))
+(commit-tx)
+
+(begin-tx "Upgrading plot")
+  (use free.energetic-constants)
+  (use free.energetic-plot-staking-center)
+
+  (env-data
+    {
+      'dao: {
+        'keys: ["dao"],
+        'pred: "keys-all"
+      },
+      'user: {
+        'keys: ["user"],
+        'pred: "keys-all"
+      }
+    }
+  )
+
+  (env-sigs
+    [
+      {
+        'key: 'dao,
+        'caps: []
+      },
+      {
+        'key: 'user,
+        'caps: [
+          (marmalade.ledger.TRANSFER ROOF_SOLAR_PANEL_TOKEN_ID PLOT_STAKING_CENTER_ESCROW_ACCOUNT "k:user" 2.0),
+          (free.energetic-plot-staking-center.UPGRADE_PLOT PLOT_ONE_TOKEN_ID ROOF_SOLAR_PANEL_TOKEN_ID "k:user" (read-keyset "user")),
+          (marmalade.ledger.TRANSFER "t:XuRlIGazr0ctnVKlJ5HY3Gs2PXHn0wYt1Vkzl3WGWy0" "k:user" "u:free.energetic-plot-staking-center.require-PLOT:dPqAMWtk1_RwweZNkuWDRVh8GdsamXz7e_jcSo72q0c" 2.0),
+          (free.energetic-enumerable-collection-policy.TRANSFER "t:XuRlIGazr0ctnVKlJ5HY3Gs2PXHn0wYt1Vkzl3WGWy0" "k:user" "u:free.energetic-plot-staking-center.require-PLOT:dPqAMWtk1_RwweZNkuWDRVh8GdsamXz7e_jcSo72q0c" 2.0)
+        ]
+      }
+    ]
+  )
+
+  (expect "Upgrade plot with roof solar panels (2)"
+    true
+    (free.energetic-plot-staking-center.upgrade-plot PLOT_ONE_TOKEN_ID ROOF_SOLAR_PANEL_TOKEN_ID 2.0 "k:user" (read-keyset "user"))
+  )
+
+  (expect "Plot with upgraded roof-solar-panels"
+    [
+      {
+        'plot-id: PLOT_ONE_TOKEN_ID,
+        'item-id: ROOF_SOLAR_PANEL_TOKEN_ID,
+        'amount: 2.0,
+        'account: "k:user",
+        'type: SLOT_TYPE_ROOF_SOLAR_PANEL,
+        'locked-since: (time "1970-01-01T00:00:00Z")
+      }
+    ]
+    (free.energetic-plot-staking-center.get-staked-items-on-plot PLOT_ONE_TOKEN_ID)
+  )
+(commit-tx)
+
+(begin-tx)
+  (use free.energetic-constants)
+  (use free.energetic-plot-staking-center)
+
+  (env-data
+    {
+      'dao: {
+        'keys: ["dao"],
+        'pred: "keys-all"
+      },
+      'user: {
+        'keys: ["user"],
+        'pred: "keys-all"
+      }
+    }
+  )
+
+  (env-sigs
+    [
+      {
+        'key: 'dao,
+        'caps: []
+      },
+      {
+        'key: 'user,
+        'caps: [
+          (marmalade.ledger.TRANSFER ROOF_SOLAR_PANEL_TOKEN_ID PLOT_STAKING_CENTER_ESCROW_ACCOUNT "k:user" 4.0),
+          (free.energetic-plot-staking-center.UPGRADE_PLOT PLOT_ONE_TOKEN_ID ROOF_SOLAR_PANEL_TOKEN_ID "k:user" (read-keyset "user")),
+          (marmalade.ledger.TRANSFER "t:XuRlIGazr0ctnVKlJ5HY3Gs2PXHn0wYt1Vkzl3WGWy0" "k:user" "u:free.energetic-plot-staking-center.require-PLOT:dPqAMWtk1_RwweZNkuWDRVh8GdsamXz7e_jcSo72q0c" 4.0),
+          (free.energetic-enumerable-collection-policy.TRANSFER "t:XuRlIGazr0ctnVKlJ5HY3Gs2PXHn0wYt1Vkzl3WGWy0" "k:user" "u:free.energetic-plot-staking-center.require-PLOT:dPqAMWtk1_RwweZNkuWDRVh8GdsamXz7e_jcSo72q0c" 4.0)
+        ]
+      }
+    ]
+  )
+
+  (expect-failure "Upgrade plot with roof solar panels cannot exceed max"
+    (format "Amount can max be {}" [(free.energetic-plot-staking-center.get-slot-type-max SLOT_TYPE_ROOF_SOLAR_PANEL)])
+    (free.energetic-plot-staking-center.upgrade-plot PLOT_ONE_TOKEN_ID ROOF_SOLAR_PANEL_TOKEN_ID 4.0 "k:user" (read-keyset "user"))
+  )
+(rollback-tx)
+
+(begin-tx "Upgrading plot 2")
+  (use free.energetic-constants)
+  (use free.energetic-plot-staking-center)
+
+  (env-data
+    {
+      'dao: {
+        'keys: ["dao"],
+        'pred: "keys-all"
+      },
+      'user: {
+        'keys: ["user"],
+        'pred: "keys-all"
+      }
+    }
+  )
+
+  (env-sigs
+    [
+      {
+        'key: 'dao,
+        'caps: []
+      },
+      {
+        'key: 'user,
+        'caps: [
+          (marmalade.ledger.TRANSFER ROOF_SOLAR_PANEL_TOKEN_ID PLOT_STAKING_CENTER_ESCROW_ACCOUNT "k:user" 2.0),
+          (free.energetic-plot-staking-center.UPGRADE_PLOT PLOT_ONE_TOKEN_ID ROOF_SOLAR_PANEL_TOKEN_ID "k:user" (read-keyset "user")),
+          (free.energetic-plot-staking-center.UNSTAKE PLOT_ONE_TOKEN_ID "k:user"),
+          (marmalade.ledger.TRANSFER "t:XuRlIGazr0ctnVKlJ5HY3Gs2PXHn0wYt1Vkzl3WGWy0" "k:user" "u:free.energetic-plot-staking-center.require-PLOT:dPqAMWtk1_RwweZNkuWDRVh8GdsamXz7e_jcSo72q0c" 2.0),
+          (free.energetic-enumerable-collection-policy.TRANSFER "t:XuRlIGazr0ctnVKlJ5HY3Gs2PXHn0wYt1Vkzl3WGWy0" "k:user" "u:free.energetic-plot-staking-center.require-PLOT:dPqAMWtk1_RwweZNkuWDRVh8GdsamXz7e_jcSo72q0c" 2.0)
+        ]
+      }
+    ]
+  )
+
+  (expect "Upgrade plot with roof solar panels (4)"
+    true
+    (free.energetic-plot-staking-center.upgrade-plot PLOT_ONE_TOKEN_ID ROOF_SOLAR_PANEL_TOKEN_ID 2.0 "k:user" (read-keyset "user"))
+  )
+
+  (expect "Plot with upgraded with extra roof-solar-panels"
+    [
+      {
+        'plot-id: PLOT_ONE_TOKEN_ID,
+        'item-id: ROOF_SOLAR_PANEL_TOKEN_ID,
+        'amount: 4.0,
+        'account: "k:user",
+        'type: SLOT_TYPE_ROOF_SOLAR_PANEL,
+        'locked-since: (time "1970-01-01T00:00:00Z")
+      }
+    ]
+    (free.energetic-plot-staking-center.get-staked-items-on-plot PLOT_ONE_TOKEN_ID)
+  )
+(commit-tx)
+
+(begin-tx "Unstaking plot")
+  (use marmalade.ledger)
+  (use marmalade.policy-manager)
+  (use marmalade.collection-policy-v1)
+  (use free.energetic-constants)
+  (use free.energetic-plot-staking-center)
+
+  (env-data
+    {
+      'dao: {
+        'keys: ["dao"],
+        'pred: "keys-all"
+      },
+      'user: {
+        'keys: ["user"],
+        'pred: "keys-all"
+      }
+    }
+  )
+
+  (env-sigs
+    [
+      {
+        'key: 'dao,
+        'caps: []
+      },
+      {
+        'key: 'user,
+        'caps: [
+          (free.energetic-plot-staking-center.UNSTAKE PLOT_ONE_TOKEN_ID "k:user")
+        ]
+      }
+    ]
+  )
+
+  (free.energetic-plot-staking-center.get-plot PLOT_ONE_TOKEN_ID)
+
+  (free.energetic-plot-staking-center.get-staked-plots "k:user")
+
+  (expect "Unstaking plot"
+    true
+    (free.energetic-plot-staking-center.unlock-plot PLOT_ONE_TOKEN_ID 1.0 "k:user")
+  )
+
+  (expect "Plot to be unstaked"
+    1.0
+    (marmalade.ledger.get-balance PLOT_ONE_TOKEN_ID "k:user")
+  )
+
+  (expect "Plot upgraded items to be unstaked"
+    6.0
+    (marmalade.ledger.get-balance ROOF_SOLAR_PANEL_TOKEN_ID "k:user")
+  )
+  
+  (free.energetic-plot-staking-center.get-plot PLOT_ONE_TOKEN_ID)
+
+  (print ROOF_SOLAR_PANEL_TOKEN_ID)
+  (free.energetic-enumerable-collection-policy.get-collection-tokens-for-account PLOT_UPGRADES_COLLECTION_ID "k:user")
+  (free.energetic-enumerable-collection-policy.get-collection-tokens-for-account PLOT_COLLECTION_ID "k:user")
+
+  (free.energetic-enumerable-collection-policy.get-collection-tokens-for-account PLOT_COLLECTION_ID "k:dao")
+
+  (print "")
+
+  (free.energetic-enumerable-collection-policy.get-tokens-for-account "k:user")
+
+  (print "")
+
+  (free.energetic-enumerable-collection-policy.get-collection-tokens PLOT_COLLECTION_ID)
+(commit-tx)
