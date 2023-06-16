@@ -20,17 +20,7 @@
       account:string
       token-ids:[string]
     )
-  
-    (defschema item-schema
-      collection-id:string
-      token-id:string
-      owner:string
-    )
-  
-    ; V1
-    (deftable item-table:{item-schema})
 
-    ; V2
     (deftable tokens:{token-schema})
 
     ;;
@@ -64,7 +54,6 @@
     )
 
     (defun transfer:bool (token-id:string sender:string receiver:string amount:decimal)
-      (enforce false "Transfer prohibited")
       (with-capability (TRANSFER token-id sender receiver amount)
         (let*
           (
@@ -92,7 +81,7 @@
               'token-ids: (+ old-receiver-tokens (make-list (round amount) token-id))
             }
           )
-        true
+          true
         )
       )
     )
@@ -206,57 +195,29 @@
     (defun get-collection-tokens (collection-id:string)
       (let
         (
-          (map-items (lambda (item) (get-token-info item "")))
+          (map-items (lambda (item) (at 'token-ids item)))
+          (map-token-ids (lambda (token-id) (get-token-info token-id "")))
         )
         (map
-          (map-items)
-          (select tokens
-            [
-              'token-id
-            ]
-            (where 'collection-id (= collection-id))
+          (map-token-ids)
+          (distinct
+            (fold
+              (+)
+              []
+              (map
+                (map-items)
+                (select tokens
+                  [
+                    'token-ids
+                  ]
+                  (where 'collection-id (= collection-id))
+                )
+              )
+            )
           )
         )
       )
     )
-
-    ; v1
-
-    (defun get-item-keys:[string] ()
-      (keys item-table)
-    )
-
-    (defun get-items:object{item-schema} ()
-      (map
-        (lambda (key) (read item-table key))
-        (get-item-keys)
-      )
-    )
-
-    ; Migrate
-    (defun migrate-v1-object:object{token-schema} (item:object{item-schema})
-      (let
-        (
-          (token-id:string (at 'id item))
-          (collection-id:string (at 'collection-id item))
-          (account:string (at 'account item))
-          (token-ids:[string] (at 'token-ids item))
-        )
-        (write tokens (key collection-id account)
-          {
-            'collection-id: collection-id,
-            'account: account,
-            'token-ids: token-ids
-          }
-        )
-        {
-          'collection-id: collection-id,
-          'account: account,
-          'token-ids: token-ids
-        }
-      )
-    )
   )
   
-  (create-table item-table)
   (create-table tokens)

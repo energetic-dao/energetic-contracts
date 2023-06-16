@@ -3,8 +3,8 @@
 (define-keyset "free.energetic-operator" (read-keyset "energetic-operator"))
 (module energetic-plot-staking-center GOVERNANCE
 
-  (use free.energetic-plot-item-policy)
-  (use free.energetic-plot-policy)
+  (use marmalade.ledger [token-schema get-token-info get-balance])
+  (use kip.token-policy-v2 [token-info])
 
   ;;
   ;; Schemas
@@ -77,9 +77,21 @@
   (defcap UNSTAKE:bool (plot-id:string account:string)
     (with-read staked-plots plot-id
       {
-        "account-guard" := guard
+        'account-guard := guard
       }
       (compose-capability (PLOT plot-id))
+      (enforce-guard guard)
+    )
+  )
+
+  (defcap DEGRADE_PLOT:bool (plot-id:string item-id:string account:string)
+    (with-read staked-plot-items (key plot-id item-id)
+      {
+        'plot-id := staked-plot-id,
+        'account-guard := guard
+      }
+      (compose-capability (PLOT plot-id))
+      (enforce (= plot-id staked-plot-id) "Invalid plot id")
       (enforce-guard guard)
     )
   )
@@ -190,6 +202,12 @@
                   (install-capability (free.energetic-enumerable-collection-policy.TRANSFER staked-item escrow-account account staked-amount))
                   (install-capability (marmalade.ledger.TRANSFER staked-item escrow-account account staked-amount))
                   (marmalade.ledger.transfer staked-item escrow-account account staked-amount)
+                  (update staked-plot-items (key plot-id staked-item)
+                    {
+                      'account: "",
+                      'amount: 0.0
+                    }
+                  )
                 )
               )
             )
@@ -215,9 +233,63 @@
     )
   )
 
+  (defun unlock-plot-item:bool (plot-id:string token-id:string amount:decimal account:string)
+    (enforce (> amount 0.0) "Amount must be greater than 0")
+    (with-capability (DEGRADE_PLOT plot-id token-id account)
+      (bind (get-plot plot-id)
+        {
+          'token-ids := token-ids,
+          'escrow-account := escrow-account
+        }
+        (with-default-read staked-plot-items (key plot-id token-id)
+          {
+            'amount: 0.0
+          }
+          {
+            'type := type,
+            'amount := staked-amount
+          }
+          (let
+            (
+              (new-bal:decimal (- staked-amount amount))
+              (max-staked-amount:decimal (get-slot-type-max type))
+            )
+            (enforce (<= amount max-staked-amount) "Exceeds max amount")
+            (enforce (>= staked-amount amount) "Not enough staked items on plot")
+
+            (install-capability (free.energetic-enumerable-collection-policy.TRANSFER token-id escrow-account account new-bal))
+            (install-capability (marmalade.ledger.TRANSFER token-id escrow-account account new-bal))
+            (marmalade.ledger.transfer token-id escrow-account account new-bal)
+            (let
+              (
+                (filtered-tokens:[string] (filter (!= token-id) token-ids))
+              )
+              (update staked-plots plot-id
+                {
+                  'token-ids: (+ filtered-tokens (make-list 
+                    (-
+                      (- (length token-ids) (length filtered-tokens))
+                      (round amount)
+                    ) token-id))
+                }
+              )
+              
+              (update staked-plot-items (key plot-id token-id)
+                {
+                  'amount: new-bal
+                }
+              )
+            )
+          )
+          true
+        )
+      )
+    )
+  )
+
   (defun upgrade-plot:bool (plot-id:string item-id:string amount:decimal account:string account-guard:guard)
     (with-capability (UPGRADE_PLOT plot-id item-id account account-guard)
-      (bind (get-token-metadata item-id)
+      (bind (free.energetic-plot-item-policy.get-token-metadata item-id)
         {
           'type := type
         }
@@ -361,6 +433,29 @@
     )
   )
 
+  (defun get-plot-power-rate:decimal (plot-id:string)
+    (with-read staked-plots plot-id
+      {
+        'token-ids := token-ids
+      }
+      (let
+        (
+          (map-token-power-rate 
+            (lambda (token-id:string) 
+              (at 'power-rate (free.energetic-plot-item-policy.get-token-metadata token-id))
+            )
+          )
+        )
+        (fold (+) 0
+          (map
+            map-token-power-rate
+            token-ids
+          )
+        )
+      )
+    )
+  )
+
   (defun get-staked-items-on-plot:object{staked-plot-item-schema} (plot-id:string)
     (with-read staked-plots plot-id
       {
@@ -372,20 +467,26 @@
         (with-read staked-plot-items (key plot-id token-id)
           {
             'plot-id := plot-id,
-            'item-id := item-id,
             'amount := amount,
             'type := type,
             'account := account,
             'locked-since := locked-since
           }
-          {
-            'plot-id: plot-id,
-            'item-id: item-id,
-            'amount: amount,
-            'type: type,
-            'account: account,
-            'locked-since: locked-since
-          }
+          (let
+            (
+              (token-info:object{token-info} (get-token-info token-id))
+            )
+            (+
+              token-info
+              {
+              'plot-id: plot-id,
+              'amount: amount,
+              'type: type,
+              'account: account,
+              'locked-since: locked-since
+              }
+            )
+          )
         )
       ) (distinct token-ids))
     )
